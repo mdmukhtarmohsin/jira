@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const demos = [
   {
@@ -21,25 +21,29 @@ const demos = [
     description: "Drag-and-drop task management with AI insights",
     image: "/placeholder.svg?height=400&width=600",
   },
-]
+];
 
 export function DemoCarousel() {
-  const [currentSlide, setCurrentSlide] = useState(0)
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % demos.length)
-  }
+    setCurrentSlide((prev) => (prev + 1) % demos.length);
+  };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + demos.length) % demos.length)
-  }
+    setCurrentSlide((prev) => (prev - 1 + demos.length) % demos.length);
+  };
 
   return (
     <section className="py-24 bg-gray-50">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center mb-16">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">See It In Action</h2>
-          <p className="mt-6 text-lg leading-8 text-gray-600">Experience the power of AI-enhanced project management</p>
+          <h2 className="text-3xl font-bold tracking-tight  sm:text-4xl">
+            See It In Action
+          </h2>
+          <p className="mt-6 text-lg leading-8 text-gray-600">
+            Experience the power of AI-enhanced project management
+          </p>
         </div>
 
         <div className="relative">
@@ -53,8 +57,12 @@ export function DemoCarousel() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                 <div className="absolute bottom-6 left-6 text-white">
-                  <h3 className="text-2xl font-bold">{demos[currentSlide].title}</h3>
-                  <p className="text-gray-200">{demos[currentSlide].description}</p>
+                  <h3 className="text-2xl font-bold">
+                    {demos[currentSlide].title}
+                  </h3>
+                  <p className="text-gray-200">
+                    {demos[currentSlide].description}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -92,5 +100,5 @@ export function DemoCarousel() {
         </div>
       </div>
     </section>
-  )
+  );
 }

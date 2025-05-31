@@ -1,17 +1,28 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Progress } from "@/components/ui/progress"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   ArrowLeft,
   Users,
@@ -24,67 +35,67 @@ import {
   Trash2,
   RefreshCw,
   AlertTriangle,
-} from "lucide-react"
-import { supabase } from "@/lib/auth"
-import { useAuth } from "@/hooks/use-auth"
-import { toast } from "@/hooks/use-toast"
-import Link from "next/link"
+} from "lucide-react";
+import { supabase } from "@/lib/auth";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "@/hooks/use-toast";
+import Link from "next/link";
 
 interface TeamMember {
-  id: string
-  name: string
-  email: string
-  avatar: string | null
-  initials: string
-  joinedAt: string
+  id: string;
+  name: string;
+  email: string;
+  avatar: string | null;
+  initials: string;
+  joinedAt: string;
 }
 
 interface Sprint {
-  id: string
-  name: string
-  status: string
-  progress: number
-  startDate: string
-  endDate: string
-  taskCount: number
-  completedTasks: number
+  id: string;
+  name: string;
+  status: string;
+  progress: number;
+  startDate: string;
+  endDate: string;
+  taskCount: number;
+  completedTasks: number;
 }
 
 interface TeamDetails {
-  id: string
-  name: string
-  description: string | null
-  createdAt: string
-  memberCount: number
-  members: TeamMember[]
-  sprints: Sprint[]
+  id: string;
+  name: string;
+  description: string | null;
+  createdAt: string;
+  memberCount: number;
+  members: TeamMember[];
+  sprints: Sprint[];
   stats: {
-    activeSprints: number
-    completedTasksThisMonth: number
-    totalTasks: number
-  }
+    activeSprints: number;
+    completedTasksThisMonth: number;
+    totalTasks: number;
+  };
 }
 
 export default function TeamDetailPage() {
-  const params = useParams()
-  const router = useRouter()
-  const { user } = useAuth()
-  const teamId = params.teamId as string
+  const params = useParams();
+  const router = useRouter();
+  const { user } = useAuth();
+  const teamId = params.teamId as string;
 
-  const [team, setTeam] = useState<TeamDetails | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [isEditing, setIsEditing] = useState(false)
+  const [team, setTeam] = useState<TeamDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
     name: "",
     description: "",
-  })
+  });
 
   const fetchTeamDetails = async () => {
-    if (!user || !teamId) return
+    if (!user || !teamId) return;
 
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
       // Get team basic info
@@ -92,43 +103,45 @@ export default function TeamDetailPage() {
         .from("teams")
         .select("id, name, description, created_at")
         .eq("id", teamId)
-        .single()
+        .single();
 
       if (teamError) {
-        setError("Team not found")
-        return
+        setError("Team not found");
+        return;
       }
 
       // Get team members
       const { data: teamMembers, error: membersError } = await supabase
         .from("team_members")
         .select("user_id, joined_at")
-        .eq("team_id", teamId)
+        .eq("team_id", teamId);
 
       if (membersError) {
-        console.error("Error fetching team members:", membersError)
+        console.error("Error fetching team members:", membersError);
       }
 
       // Get user profiles for team members
-      const members: TeamMember[] = []
+      const members: TeamMember[] = [];
       if (teamMembers && teamMembers.length > 0) {
-        const userIds = teamMembers.map((member) => member.user_id)
+        const userIds = teamMembers.map((member) => member.user_id);
 
         // Get user profiles
         const { data: userProfiles, error: profilesError } = await supabase
           .from("user_profiles")
           .select("id, full_name, avatar_url")
-          .in("id", userIds)
+          .in("id", userIds);
 
         if (profilesError) {
-          console.error("Error fetching user profiles:", profilesError)
+          console.error("Error fetching user profiles:", profilesError);
         }
 
         // Get user emails from auth.users (this would need to be done via a function in a real app)
         // For now, we'll use placeholder emails
         if (userProfiles) {
           for (const profile of userProfiles) {
-            const memberData = teamMembers.find((m) => m.user_id === profile.id)
+            const memberData = teamMembers.find(
+              (m) => m.user_id === profile.id
+            );
             members.push({
               id: profile.id,
               name: profile.full_name || "Unknown User",
@@ -142,7 +155,7 @@ export default function TeamDetailPage() {
                     .toUpperCase()
                 : "U",
               joinedAt: memberData?.joined_at || "",
-            })
+            });
           }
         }
       }
@@ -152,32 +165,36 @@ export default function TeamDetailPage() {
         .from("sprints")
         .select("id, name, status, start_date, end_date")
         .eq("team_id", teamId)
-        .order("created_at", { ascending: false })
+        .order("created_at", { ascending: false });
 
       if (sprintsError) {
-        console.error("Error fetching sprints:", sprintsError)
+        console.error("Error fetching sprints:", sprintsError);
       }
 
       // Process sprints with task counts
-      const sprints: Sprint[] = []
+      const sprints: Sprint[] = [];
       if (sprintsData) {
         for (const sprint of sprintsData) {
           // Get task counts for this sprint
           const { data: sprintTasks, error: sprintTasksError } = await supabase
             .from("sprint_tasks")
-            .select(`
+            .select(
+              `
               task_id,
               tasks!inner(status)
-            `)
-            .eq("sprint_id", sprint.id)
+            `
+            )
+            .eq("sprint_id", sprint.id);
 
           if (sprintTasksError) {
-            console.error("Error fetching sprint tasks:", sprintTasksError)
+            console.error("Error fetching sprint tasks:", sprintTasksError);
           }
 
-          const taskCount = sprintTasks?.length || 0
-          const completedTasks = sprintTasks?.filter((st) => st.tasks.status === "done").length || 0
-          const progress = taskCount > 0 ? Math.round((completedTasks / taskCount) * 100) : 0
+          const taskCount = sprintTasks?.length || 0;
+          const completedTasks =
+            sprintTasks?.filter((st) => st.tasks.status === "done").length || 0;
+          const progress =
+            taskCount > 0 ? Math.round((completedTasks / taskCount) * 100) : 0;
 
           sprints.push({
             id: sprint.id,
@@ -188,27 +205,30 @@ export default function TeamDetailPage() {
             endDate: sprint.end_date,
             taskCount,
             completedTasks,
-          })
+          });
         }
       }
 
       // Get team statistics
-      const thisMonth = new Date()
-      thisMonth.setDate(1)
+      const thisMonth = new Date();
+      thisMonth.setDate(1);
 
       const { data: allTasks, error: tasksError } = await supabase
         .from("tasks")
         .select("id, status, updated_at")
-        .eq("team_id", teamId)
+        .eq("team_id", teamId);
 
       if (tasksError) {
-        console.error("Error fetching tasks:", tasksError)
+        console.error("Error fetching tasks:", tasksError);
       }
 
       const completedThisMonth =
-        allTasks?.filter((task) => task.status === "done" && new Date(task.updated_at) >= thisMonth).length || 0
+        allTasks?.filter(
+          (task) =>
+            task.status === "done" && new Date(task.updated_at) >= thisMonth
+        ).length || 0;
 
-      const activeSprints = sprints.filter((s) => s.status === "active").length
+      const activeSprints = sprints.filter((s) => s.status === "active").length;
 
       setTeam({
         id: teamData.id,
@@ -223,22 +243,22 @@ export default function TeamDetailPage() {
           completedTasksThisMonth: completedThisMonth,
           totalTasks: allTasks?.length || 0,
         },
-      })
+      });
 
       setEditForm({
         name: teamData.name,
         description: teamData.description || "",
-      })
+      });
     } catch (err: any) {
-      console.error("Team details fetch error:", err)
-      setError(err.message || "An unexpected error occurred")
+      console.error("Team details fetch error:", err);
+      setError(err.message || "An unexpected error occurred");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleUpdateTeam = async () => {
-    if (!team || !editForm.name.trim()) return
+    if (!team || !editForm.name.trim()) return;
 
     try {
       const { error } = await supabase
@@ -247,56 +267,58 @@ export default function TeamDetailPage() {
           name: editForm.name.trim(),
           description: editForm.description.trim() || null,
         })
-        .eq("id", team.id)
+        .eq("id", team.id);
 
-      if (error) throw error
+      if (error) throw error;
 
       toast({
         title: "Success",
         description: "Team updated successfully!",
-      })
+      });
 
-      setIsEditing(false)
-      fetchTeamDetails()
+      setIsEditing(false);
+      fetchTeamDetails();
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   const handleDeleteTeam = async () => {
-    if (!team) return
+    if (!team) return;
 
-    const confirmed = window.confirm(`Are you sure you want to delete "${team.name}"? This action cannot be undone.`)
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${team.name}"? This action cannot be undone.`
+    );
 
-    if (!confirmed) return
+    if (!confirmed) return;
 
     try {
-      const { error } = await supabase.from("teams").delete().eq("id", team.id)
+      const { error } = await supabase.from("teams").delete().eq("id", team.id);
 
-      if (error) throw error
+      if (error) throw error;
 
       toast({
         title: "Success",
         description: "Team deleted successfully!",
-      })
+      });
 
-      router.push("/dashboard/teams")
+      router.push("/dashboard/teams");
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   useEffect(() => {
-    fetchTeamDetails()
-  }, [user, teamId])
+    fetchTeamDetails();
+  }, [user, teamId]);
 
   if (loading) {
     return (
@@ -321,7 +343,7 @@ export default function TeamDetailPage() {
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   if (error || !team) {
@@ -339,8 +361,12 @@ export default function TeamDetailPage() {
         <Card className="border-red-200 bg-red-50">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <AlertTriangle className="h-12 w-12 text-red-600 mb-4" />
-            <h3 className="text-lg font-medium text-red-900 mb-2">Error Loading Team</h3>
-            <p className="text-red-700 text-center mb-4">{error || "Team not found"}</p>
+            <h3 className="text-lg font-medium text-red-900 mb-2">
+              Error Loading Team
+            </h3>
+            <p className="text-red-700 text-center mb-4">
+              {error || "Team not found"}
+            </p>
             <div className="flex space-x-3">
               <Button onClick={fetchTeamDetails} variant="outline">
                 <RefreshCw className="mr-2 h-4 w-4" />
@@ -353,7 +379,7 @@ export default function TeamDetailPage() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -371,12 +397,16 @@ export default function TeamDetailPage() {
               <div className="space-y-2">
                 <Input
                   value={editForm.name}
-                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, name: e.target.value })
+                  }
                   className="text-2xl font-bold"
                 />
                 <Textarea
                   value={editForm.description}
-                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, description: e.target.value })
+                  }
                   placeholder="Team description..."
                   rows={2}
                 />
@@ -384,15 +414,21 @@ export default function TeamDetailPage() {
                   <Button size="sm" onClick={handleUpdateTeam}>
                     Save
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsEditing(false)}
+                  >
                     Cancel
                   </Button>
                 </div>
               </div>
             ) : (
               <>
-                <h1 className="text-3xl font-bold text-gray-900">{team.name}</h1>
-                <p className="text-gray-600">{team.description || "No description"}</p>
+                <h1 className="text-3xl font-bold ">{team.name}</h1>
+                <p className="text-gray-600">
+                  {team.description || "No description"}
+                </p>
               </>
             )}
           </div>
@@ -415,7 +451,10 @@ export default function TeamDetailPage() {
                 <Edit className="mr-2 h-4 w-4" />
                 Edit Team
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDeleteTeam} className="text-red-600">
+              <DropdownMenuItem
+                onClick={handleDeleteTeam}
+                className="text-red-600"
+              >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete Team
               </DropdownMenuItem>
@@ -438,7 +477,9 @@ export default function TeamDetailPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Sprints</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Active Sprints
+            </CardTitle>
             <Calendar className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
@@ -449,11 +490,15 @@ export default function TeamDetailPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tasks This Month</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Tasks This Month
+            </CardTitle>
             <Target className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{team.stats.completedTasksThisMonth}</div>
+            <div className="text-2xl font-bold">
+              {team.stats.completedTasksThisMonth}
+            </div>
             <p className="text-xs text-gray-600">Completed tasks</p>
           </CardContent>
         </Card>
@@ -472,7 +517,9 @@ export default function TeamDetailPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Team Members</CardTitle>
-                  <CardDescription>Manage team members and their roles</CardDescription>
+                  <CardDescription>
+                    Manage team members and their roles
+                  </CardDescription>
                 </div>
                 <Button>
                   <UserPlus className="mr-2 h-4 w-4" />
@@ -483,10 +530,16 @@ export default function TeamDetailPage() {
             <CardContent>
               <div className="space-y-4">
                 {team.members.map((member) => (
-                  <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div
+                    key={member.id}
+                    className="flex items-center justify-between p-4 border rounded-lg"
+                  >
                     <div className="flex items-center space-x-3">
                       <Avatar className="h-10 w-10">
-                        <AvatarImage src={member.avatar || "/placeholder.svg"} alt={member.name} />
+                        <AvatarImage
+                          src={member.avatar || "/placeholder.svg"}
+                          alt={member.name}
+                        />
                         <AvatarFallback>{member.initials}</AvatarFallback>
                       </Avatar>
                       <div>
@@ -504,7 +557,9 @@ export default function TeamDetailPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem>Change Role</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">Remove from Team</DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-600">
+                            Remove from Team
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -521,7 +576,9 @@ export default function TeamDetailPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Team Sprints</CardTitle>
-                  <CardDescription>View and manage team sprints</CardDescription>
+                  <CardDescription>
+                    View and manage team sprints
+                  </CardDescription>
                 </div>
                 <Link href="/dashboard/sprint-planning">
                   <Button>Create Sprint</Button>
@@ -541,7 +598,15 @@ export default function TeamDetailPage() {
                             {new Date(sprint.endDate).toLocaleDateString()}
                           </p>
                         </div>
-                        <Badge variant={sprint.status === "completed" ? "default" : "secondary"}>{sprint.status}</Badge>
+                        <Badge
+                          variant={
+                            sprint.status === "completed"
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
+                          {sprint.status}
+                        </Badge>
                       </div>
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
@@ -551,7 +616,8 @@ export default function TeamDetailPage() {
                         <Progress value={sprint.progress} className="h-2" />
                         <div className="flex justify-between text-xs text-gray-500">
                           <span>
-                            {sprint.completedTasks}/{sprint.taskCount} tasks completed
+                            {sprint.completedTasks}/{sprint.taskCount} tasks
+                            completed
                           </span>
                         </div>
                       </div>
@@ -577,7 +643,9 @@ export default function TeamDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle>Team Settings</CardTitle>
-              <CardDescription>Configure team preferences and settings</CardDescription>
+              <CardDescription>
+                Configure team preferences and settings
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
@@ -592,19 +660,24 @@ export default function TeamDetailPage() {
 
               <div className="space-y-2">
                 <Label>Created</Label>
-                <p className="text-sm text-gray-600">{new Date(team.createdAt).toLocaleDateString()}</p>
+                <p className="text-sm text-gray-600">
+                  {new Date(team.createdAt).toLocaleDateString()}
+                </p>
               </div>
 
               <div className="space-y-2">
                 <Label>Team ID</Label>
                 <Input value={team.id} disabled />
-                <p className="text-xs text-gray-500">Use this ID for integrations and API access</p>
+                <p className="text-xs text-gray-500">
+                  Use this ID for integrations and API access
+                </p>
               </div>
 
               <div className="pt-4 border-t">
                 <h4 className="font-medium text-red-900 mb-2">Danger Zone</h4>
                 <p className="text-sm text-gray-600 mb-4">
-                  Once you delete a team, there is no going back. Please be certain.
+                  Once you delete a team, there is no going back. Please be
+                  certain.
                 </p>
                 <Button variant="destructive" onClick={handleDeleteTeam}>
                   <Trash2 className="mr-2 h-4 w-4" />
@@ -616,5 +689,5 @@ export default function TeamDetailPage() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

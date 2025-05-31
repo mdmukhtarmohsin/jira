@@ -41,55 +41,69 @@ const columns = [
   {
     id: "todo",
     title: "To Do",
-    color: "bg-gray-50 border-gray-200",
-    textColor: "text-gray-600",
-    headerColor: "bg-gray-100/50",
+    color: "bg-muted border-border",
+    textColor: "text-muted-foreground",
+    headerColor: "bg-muted/50",
   },
   {
     id: "in_progress",
     title: "In Progress",
-    color: "bg-blue-50 border-blue-200",
-    textColor: "text-blue-600",
-    headerColor: "bg-blue-100/50",
+    color:
+      "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800",
+    textColor: "text-blue-600 dark:text-blue-400",
+    headerColor: "bg-blue-100/50 dark:bg-blue-950/50",
   },
   {
     id: "review",
     title: "In Review",
-    color: "bg-purple-50 border-purple-200",
-    textColor: "text-purple-600",
-    headerColor: "bg-purple-100/50",
+    color:
+      "bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800",
+    textColor: "text-purple-600 dark:text-purple-400",
+    headerColor: "bg-purple-100/50 dark:bg-purple-950/50",
   },
   {
     id: "done",
     title: "Done",
-    color: "bg-green-50 border-green-200",
-    textColor: "text-green-600",
-    headerColor: "bg-green-100/50",
+    color:
+      "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800",
+    textColor: "text-green-600 dark:text-green-400",
+    headerColor: "bg-green-100/50 dark:bg-green-950/50",
   },
 ];
 
 const priorityConfig = {
   high: {
-    color: "text-red-600 bg-red-50 border-red-200",
+    color:
+      "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800",
     icon: "🔴",
-    flag: "text-red-500",
+    flag: "text-red-500 dark:text-red-400",
   },
   medium: {
-    color: "text-orange-600 bg-orange-50 border-orange-200",
+    color:
+      "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800",
     icon: "🟡",
-    flag: "text-orange-500",
+    flag: "text-orange-500 dark:text-orange-400",
   },
   low: {
-    color: "text-green-600 bg-green-50 border-green-200",
+    color:
+      "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800",
     icon: "🟢",
-    flag: "text-green-500",
+    flag: "text-green-500 dark:text-green-400",
   },
 };
 
 const typeConfig = {
-  story: { color: "bg-blue-50 text-blue-700 border-blue-200", icon: "📖" },
-  bug: { color: "bg-red-50 text-red-700 border-red-200", icon: "🐛" },
-  task: { color: "bg-gray-50 text-gray-700 border-gray-200", icon: "✓" },
+  story: {
+    color:
+      "bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800",
+    icon: "📖",
+  },
+  bug: {
+    color:
+      "bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800",
+    icon: "🐛",
+  },
+  task: { color: "bg-muted text-muted-foreground border-border", icon: "✓" },
 };
 
 export default function KanbanPage() {
@@ -172,28 +186,28 @@ export default function KanbanPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4">
+      <div className="min-h-screen bg-background p-4">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="h-6 bg-gray-200 rounded w-48 animate-pulse"></div>
-              <div className="h-3 bg-gray-200 rounded w-96 mt-1 animate-pulse"></div>
+              <div className="h-6 bg-muted rounded w-48 animate-pulse"></div>
+              <div className="h-3 bg-muted rounded w-96 mt-1 animate-pulse"></div>
             </div>
             <div className="flex space-x-3">
-              <div className="h-8 bg-gray-200 rounded w-32 animate-pulse"></div>
-              <div className="h-8 bg-gray-200 rounded w-20 animate-pulse"></div>
+              <div className="h-8 bg-muted rounded w-32 animate-pulse"></div>
+              <div className="h-8 bg-muted rounded w-20 animate-pulse"></div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="space-y-3">
-                <div className="h-12 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-12 bg-muted rounded animate-pulse"></div>
                 <div className="space-y-2">
                   {[...Array(3)].map((_, j) => (
                     <div
                       key={j}
-                      className="h-24 bg-gray-200 rounded animate-pulse"
+                      className="h-24 bg-muted rounded animate-pulse"
                     ></div>
                   ))}
                 </div>
@@ -207,22 +221,24 @@ export default function KanbanPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4">
+      <div className="min-h-screen bg-background p-4">
         <div className="space-y-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Kanban Board</h1>
-            <p className="text-sm text-gray-600">
+            <h1 className="text-2xl font-bold text-foreground">Kanban Board</h1>
+            <p className="text-sm text-muted-foreground">
               Drag and drop tasks to update their status
             </p>
           </div>
 
-          <Card className="border-red-200 bg-red-50">
+          <Card className="border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30">
             <CardContent className="flex flex-col items-center justify-center py-8">
-              <AlertTriangle className="h-8 w-8 text-red-600 mb-3" />
-              <h3 className="text-lg font-medium text-red-900 mb-2">
+              <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400 mb-3" />
+              <h3 className="text-lg font-medium text-red-900 dark:text-red-100 mb-2">
                 Error Loading Kanban Board
               </h3>
-              <p className="text-red-700 text-center mb-4 text-sm">{error}</p>
+              <p className="text-red-700 dark:text-red-300 text-center mb-4 text-sm">
+                {error}
+              </p>
               <div className="flex space-x-2">
                 <Button onClick={refetch} variant="outline" size="sm">
                   <RefreshCw className="mr-1 h-3 w-3" />
@@ -242,24 +258,24 @@ export default function KanbanPage() {
 
   if (teams.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4">
+      <div className="min-h-screen bg-background p-4">
         <div className="space-y-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Kanban Board</h1>
-            <p className="text-sm text-gray-600">
+            <h1 className="text-2xl font-bold text-foreground">Kanban Board</h1>
+            <p className="text-sm text-muted-foreground">
               Create a team first to start managing tasks
             </p>
           </div>
 
-          <Card className="border-dashed border-2 border-gray-300">
+          <Card className="border-dashed border-2 border-border">
             <CardContent className="flex flex-col items-center justify-center py-8">
-              <div className="rounded-full bg-blue-100 p-2 mb-3">
-                <Plus className="h-6 w-6 text-blue-600" />
+              <div className="rounded-full bg-blue-100 dark:bg-blue-950/50 p-2 mb-3">
+                <Plus className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-foreground mb-2">
                 No Teams Found
               </h3>
-              <p className="text-gray-600 text-center mb-4 max-w-md text-sm">
+              <p className="text-muted-foreground text-center mb-4 max-w-md text-sm">
                 You need to create or join a team before you can manage tasks on
                 the Kanban board.
               </p>
@@ -277,19 +293,19 @@ export default function KanbanPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b bg-white/90 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
+      <div className="border-b border-border bg-card/90 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
         <div className="p-4">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h1 className="text-xl font-bold text-gray-900 flex items-center">
-                <div className="w-6 h-6 bg-blue-600 rounded mr-2 flex items-center justify-center">
+              <h1 className="text-xl font-bold text-foreground flex items-center">
+                <div className="w-6 h-6 bg-blue-600 dark:bg-blue-500 rounded mr-2 flex items-center justify-center">
                   <span className="text-white font-bold text-xs">KB</span>
                 </div>
                 Kanban Board
               </h1>
-              <p className="text-gray-500 mt-0.5 text-sm">
+              <p className="text-muted-foreground mt-0.5 text-sm">
                 Plan, track, and manage your team's work
               </p>
             </div>
@@ -316,7 +332,7 @@ export default function KanbanPage() {
                   {teams.map((team) => (
                     <SelectItem key={team.id} value={team.id}>
                       <div className="flex items-center">
-                        <div className="w-3 h-3 bg-blue-500 rounded-sm mr-2"></div>
+                        <div className="w-3 h-3 bg-blue-500 dark:bg-blue-400 rounded-sm mr-2"></div>
                         {team.name}
                       </div>
                     </SelectItem>
@@ -343,7 +359,7 @@ export default function KanbanPage() {
 
             <div className="flex items-center space-x-2">
               <div className="relative">
-                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3 w-3" />
                 <Input
                   placeholder="Search issues..."
                   value={searchQuery}
@@ -375,7 +391,7 @@ export default function KanbanPage() {
                       </h3>
                       <Badge
                         variant="secondary"
-                        className="bg-white/80 text-xs px-1.5 py-0.5"
+                        className="bg-card/80 text-xs px-1.5 py-0.5"
                       >
                         {getFilteredTasksByStatus(column.id).length}
                       </Badge>
@@ -409,8 +425,8 @@ export default function KanbanPage() {
                                 {...provided.dragHandleProps}
                                 className={`cursor-pointer hover:shadow-md transition-all duration-200 transform hover:-translate-y-0.5 ${
                                   snapshot.isDragging
-                                    ? "shadow-lg rotate-1 bg-white z-50 ring-2 ring-blue-400"
-                                    : "bg-white hover:bg-gray-50"
+                                    ? "shadow-lg rotate-1 bg-card z-50 ring-2 ring-blue-400 dark:ring-blue-600"
+                                    : "bg-card hover:bg-muted/50"
                                 }`}
                                 onClick={() => handleTaskClick(task)}
                               >
@@ -440,13 +456,13 @@ export default function KanbanPage() {
                                   </div>
 
                                   {/* Task Title */}
-                                  <h4 className="font-medium text-gray-900 mb-1 line-clamp-2 leading-tight text-sm">
+                                  <h4 className="font-medium text-foreground mb-1 line-clamp-2 leading-tight text-sm">
                                     {task.title}
                                   </h4>
 
                                   {/* Task Description */}
                                   {task.description && (
-                                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                                    <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
                                       {task.description}
                                     </p>
                                   )}
@@ -462,14 +478,14 @@ export default function KanbanPage() {
                                       />
 
                                       {/* Task ID */}
-                                      <span className="text-xs text-gray-500 font-mono">
+                                      <span className="text-xs text-muted-foreground font-mono">
                                         {task.id.slice(0, 6)}
                                       </span>
 
                                       {/* Comments count */}
                                       <div className="flex items-center space-x-0.5">
-                                        <MessageSquare className="h-2.5 w-2.5 text-gray-400" />
-                                        <span className="text-xs text-gray-500">
+                                        <MessageSquare className="h-2.5 w-2.5 text-muted-foreground" />
+                                        <span className="text-xs text-muted-foreground">
                                           {task.commentCount}
                                         </span>
                                       </div>
@@ -480,7 +496,7 @@ export default function KanbanPage() {
                                       {task.story_points && (
                                         <Badge
                                           variant="outline"
-                                          className="text-xs bg-blue-50 text-blue-700 border-blue-200 px-1.5 py-0.5"
+                                          className="text-xs bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 px-1.5 py-0.5"
                                         >
                                           {task.story_points}
                                         </Badge>
@@ -496,13 +512,13 @@ export default function KanbanPage() {
                                             }
                                             alt={task.assignee.name}
                                           />
-                                          <AvatarFallback className="text-xs bg-blue-100 text-blue-700">
+                                          <AvatarFallback className="text-xs bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300">
                                             {task.assignee.initials}
                                           </AvatarFallback>
                                         </Avatar>
                                       ) : (
                                         <Avatar className="h-5 w-5">
-                                          <AvatarFallback className="text-xs bg-gray-100 text-gray-400">
+                                          <AvatarFallback className="text-xs bg-muted text-muted-foreground">
                                             <User className="h-2.5 w-2.5" />
                                           </AvatarFallback>
                                         </Avatar>
@@ -514,20 +530,20 @@ export default function KanbanPage() {
                                   {(task.isBlocked ||
                                     task.isOverdue ||
                                     task.due_date) && (
-                                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+                                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-border">
                                       <div className="flex items-center space-x-1.5">
                                         {task.isBlocked && (
                                           <div className="flex items-center space-x-0.5">
-                                            <AlertTriangle className="h-2.5 w-2.5 text-red-600" />
-                                            <span className="text-xs text-red-600 font-medium">
+                                            <AlertTriangle className="h-2.5 w-2.5 text-red-600 dark:text-red-400" />
+                                            <span className="text-xs text-red-600 dark:text-red-400 font-medium">
                                               Blocked
                                             </span>
                                           </div>
                                         )}
                                         {task.isOverdue && (
                                           <div className="flex items-center space-x-0.5">
-                                            <Clock className="h-2.5 w-2.5 text-orange-600" />
-                                            <span className="text-xs text-orange-600 font-medium">
+                                            <Clock className="h-2.5 w-2.5 text-orange-600 dark:text-orange-400" />
+                                            <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">
                                               Overdue
                                             </span>
                                           </div>
@@ -535,7 +551,7 @@ export default function KanbanPage() {
                                       </div>
 
                                       {task.due_date && (
-                                        <span className="text-xs text-gray-500">
+                                        <span className="text-xs text-muted-foreground">
                                           Due{" "}
                                           {new Date(
                                             task.due_date
@@ -556,7 +572,7 @@ export default function KanbanPage() {
                       {column.id === "todo" && (
                         <Button
                           variant="ghost"
-                          className="w-full justify-start text-gray-500 hover:text-gray-700 hover:bg-white/50 border-2 border-dashed border-gray-200 hover:border-gray-300 transition-all duration-200 h-8 text-xs"
+                          className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 border-2 border-dashed border-border hover:border-muted-foreground transition-all duration-200 h-8 text-xs"
                           onClick={() => handleCreateTask(column.id)}
                         >
                           <Plus className="mr-1 h-3 w-3" />

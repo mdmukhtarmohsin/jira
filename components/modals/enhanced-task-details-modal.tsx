@@ -453,7 +453,7 @@ export function EnhancedTaskDetailsModal({
                     {typeIcons[task.type]}
                   </div>
                   <div className="flex-1">
-                    <DialogTitle className="text-lg font-bold text-gray-900 mb-1">
+                    <DialogTitle className="text-lg font-bold  mb-1">
                       {isEditing ? (
                         <Input
                           value={editData.title}
@@ -529,7 +529,7 @@ export function EnhancedTaskDetailsModal({
             <div className="mt-4 space-y-4">
               {/* Description */}
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-gray-900 flex items-center space-x-1.5">
+                <Label className="text-xs font-semibold  flex items-center space-x-1.5">
                   <div className="w-0.5 h-3 bg-blue-500 rounded-full"></div>
                   <span>Description</span>
                 </Label>
@@ -560,7 +560,7 @@ export function EnhancedTaskDetailsModal({
 
               {/* Comments Section */}
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-gray-900 flex items-center space-x-1.5">
+                <Label className="text-xs font-semibold  flex items-center space-x-1.5">
                   <div className="w-0.5 h-3 bg-emerald-500 rounded-full"></div>
                   <MessageSquare className="w-3 h-3 text-emerald-600" />
                   <span>Comments</span>
@@ -624,7 +624,7 @@ export function EnhancedTaskDetailsModal({
                             <div className="flex-1 min-w-0">
                               <div className="bg-white border border-gray-200 rounded-lg p-2 shadow-sm hover:shadow-md transition-shadow duration-200">
                                 <div className="flex items-center justify-between mb-1">
-                                  <span className="font-medium text-gray-900 text-xs">
+                                  <span className="font-medium  text-xs">
                                     {comment.user.full_name}
                                   </span>
                                   <time className="text-xs text-gray-500">
@@ -683,7 +683,7 @@ export function EnhancedTaskDetailsModal({
             <div className="space-y-3">
               {/* Status */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-gray-900 uppercase tracking-wider">
+                <Label className="text-xs font-semibold  uppercase tracking-wider">
                   Status
                 </Label>
                 <div>
@@ -721,7 +721,7 @@ export function EnhancedTaskDetailsModal({
 
               {/* Priority */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-gray-900 uppercase tracking-wider">
+                <Label className="text-xs font-semibold  uppercase tracking-wider">
                   Priority
                 </Label>
                 <div>
@@ -774,7 +774,7 @@ export function EnhancedTaskDetailsModal({
 
               {/* Assignee */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-gray-900 uppercase tracking-wider">
+                <Label className="text-xs font-semibold  uppercase tracking-wider">
                   Assignee
                 </Label>
                 <div>
@@ -821,7 +821,7 @@ export function EnhancedTaskDetailsModal({
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium text-gray-900 text-xs">
+                            <p className="font-medium  text-xs">
                               {task.assignee.name}
                             </p>
                             <p className="text-xs text-gray-500">Assigned</p>
@@ -847,7 +847,7 @@ export function EnhancedTaskDetailsModal({
 
               {/* Story Points */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-gray-900 uppercase tracking-wider">
+                <Label className="text-xs font-semibold  uppercase tracking-wider">
                   Story Points
                 </Label>
                 <div>
@@ -869,7 +869,7 @@ export function EnhancedTaskDetailsModal({
                       <div className="w-5 h-5 rounded-lg bg-blue-100 flex items-center justify-center">
                         <Target className="w-2.5 h-2.5 text-blue-600" />
                       </div>
-                      <span className="font-medium text-gray-900 text-xs">
+                      <span className="font-medium  text-xs">
                         {task.story_points || "Not estimated"}
                       </span>
                     </div>
@@ -879,7 +879,7 @@ export function EnhancedTaskDetailsModal({
 
               {/* Due Date */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-gray-900 uppercase tracking-wider">
+                <Label className="text-xs font-semibold  uppercase tracking-wider">
                   Due Date
                 </Label>
                 <div>
@@ -901,7 +901,7 @@ export function EnhancedTaskDetailsModal({
                         <Calendar className="w-2.5 h-2.5 text-orange-600" />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900 text-xs">
+                        <p className="font-medium  text-xs">
                           {task.due_date
                             ? new Date(task.due_date).toLocaleDateString()
                             : "No due date"}
@@ -924,7 +924,7 @@ export function EnhancedTaskDetailsModal({
               {/* Metadata */}
               <div className="space-y-2">
                 <div className="space-y-0.5">
-                  <Label className="text-xs font-semibold text-gray-900 uppercase tracking-wider">
+                  <Label className="text-xs font-semibold  uppercase tracking-wider">
                     Created
                   </Label>
                   <div className="flex items-center space-x-1">
@@ -937,7 +937,7 @@ export function EnhancedTaskDetailsModal({
 
                 {task.updated_at && (
                   <div className="space-y-0.5">
-                    <Label className="text-xs font-semibold text-gray-900 uppercase tracking-wider">
+                    <Label className="text-xs font-semibold  uppercase tracking-wider">
                       Last Updated
                     </Label>
                     <div className="flex items-center space-x-1">
