@@ -41,30 +41,30 @@ const columns = [
   {
     id: "todo",
     title: "To Do",
-    color: "bg-slate-100 border-slate-200",
-    textColor: "text-slate-700",
-    headerColor: "bg-slate-50",
+    color: "bg-gray-50 border-gray-200",
+    textColor: "text-gray-600",
+    headerColor: "bg-gray-100/50",
   },
   {
     id: "in_progress",
     title: "In Progress",
-    color: "bg-blue-100 border-blue-200",
-    textColor: "text-blue-700",
-    headerColor: "bg-blue-50",
+    color: "bg-blue-50 border-blue-200",
+    textColor: "text-blue-600",
+    headerColor: "bg-blue-100/50",
   },
   {
     id: "review",
     title: "In Review",
-    color: "bg-purple-100 border-purple-200",
-    textColor: "text-purple-700",
-    headerColor: "bg-purple-50",
+    color: "bg-purple-50 border-purple-200",
+    textColor: "text-purple-600",
+    headerColor: "bg-purple-100/50",
   },
   {
     id: "done",
     title: "Done",
-    color: "bg-green-100 border-green-200",
-    textColor: "text-green-700",
-    headerColor: "bg-green-50",
+    color: "bg-green-50 border-green-200",
+    textColor: "text-green-600",
+    headerColor: "bg-green-100/50",
   },
 ];
 
@@ -72,24 +72,24 @@ const priorityConfig = {
   high: {
     color: "text-red-600 bg-red-50 border-red-200",
     icon: "🔴",
-    flag: "text-red-600",
+    flag: "text-red-500",
   },
   medium: {
     color: "text-orange-600 bg-orange-50 border-orange-200",
     icon: "🟡",
-    flag: "text-orange-600",
+    flag: "text-orange-500",
   },
   low: {
     color: "text-green-600 bg-green-50 border-green-200",
     icon: "🟢",
-    flag: "text-green-600",
+    flag: "text-green-500",
   },
 };
 
 const typeConfig = {
-  story: { color: "bg-blue-100 text-blue-800 border-blue-200", icon: "📖" },
-  bug: { color: "bg-red-100 text-red-800 border-red-200", icon: "🐛" },
-  task: { color: "bg-gray-100 text-gray-800 border-gray-200", icon: "✓" },
+  story: { color: "bg-blue-50 text-blue-700 border-blue-200", icon: "📖" },
+  bug: { color: "bg-red-50 text-red-700 border-red-200", icon: "🐛" },
+  task: { color: "bg-gray-50 text-gray-700 border-gray-200", icon: "✓" },
 };
 
 export default function KanbanPage() {
@@ -172,28 +172,28 @@ export default function KanbanPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-        <div className="space-y-6">
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="h-8 bg-gray-200 rounded w-48 animate-pulse"></div>
-              <div className="h-4 bg-gray-200 rounded w-96 mt-2 animate-pulse"></div>
+              <div className="h-6 bg-gray-200 rounded w-48 animate-pulse"></div>
+              <div className="h-3 bg-gray-200 rounded w-96 mt-1 animate-pulse"></div>
             </div>
-            <div className="flex space-x-4">
-              <div className="h-10 bg-gray-200 rounded w-48 animate-pulse"></div>
-              <div className="h-10 bg-gray-200 rounded w-24 animate-pulse"></div>
+            <div className="flex space-x-3">
+              <div className="h-8 bg-gray-200 rounded w-32 animate-pulse"></div>
+              <div className="h-8 bg-gray-200 rounded w-20 animate-pulse"></div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="space-y-4">
-                <div className="h-16 bg-gray-200 rounded animate-pulse"></div>
-                <div className="space-y-3">
+              <div key={i} className="space-y-3">
+                <div className="h-12 bg-gray-200 rounded animate-pulse"></div>
+                <div className="space-y-2">
                   {[...Array(3)].map((_, j) => (
                     <div
                       key={j}
-                      className="h-32 bg-gray-200 rounded animate-pulse"
+                      className="h-24 bg-gray-200 rounded animate-pulse"
                     ></div>
                   ))}
                 </div>
@@ -207,29 +207,29 @@ export default function KanbanPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-        <div className="space-y-6">
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="space-y-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Kanban Board</h1>
-            <p className="text-gray-600">
+            <h1 className="text-2xl font-bold text-gray-900">Kanban Board</h1>
+            <p className="text-sm text-gray-600">
               Drag and drop tasks to update their status
             </p>
           </div>
 
           <Card className="border-red-200 bg-red-50">
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <AlertTriangle className="h-12 w-12 text-red-600 mb-4" />
+            <CardContent className="flex flex-col items-center justify-center py-8">
+              <AlertTriangle className="h-8 w-8 text-red-600 mb-3" />
               <h3 className="text-lg font-medium text-red-900 mb-2">
                 Error Loading Kanban Board
               </h3>
-              <p className="text-red-700 text-center mb-4">{error}</p>
-              <div className="flex space-x-3">
-                <Button onClick={refetch} variant="outline">
-                  <RefreshCw className="mr-2 h-4 w-4" />
+              <p className="text-red-700 text-center mb-4 text-sm">{error}</p>
+              <div className="flex space-x-2">
+                <Button onClick={refetch} variant="outline" size="sm">
+                  <RefreshCw className="mr-1 h-3 w-3" />
                   Try Again
                 </Button>
-                <Button onClick={() => setShowCreateModal(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
+                <Button onClick={() => setShowCreateModal(true)} size="sm">
+                  <Plus className="mr-1 h-3 w-3" />
                   Create Task
                 </Button>
               </div>
@@ -242,29 +242,30 @@ export default function KanbanPage() {
 
   if (teams.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-        <div className="space-y-6">
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="space-y-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Kanban Board</h1>
-            <p className="text-gray-600">
+            <h1 className="text-2xl font-bold text-gray-900">Kanban Board</h1>
+            <p className="text-sm text-gray-600">
               Create a team first to start managing tasks
             </p>
           </div>
 
           <Card className="border-dashed border-2 border-gray-300">
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <div className="rounded-full bg-blue-100 p-3 mb-4">
-                <Plus className="h-8 w-8 text-blue-600" />
+            <CardContent className="flex flex-col items-center justify-center py-8">
+              <div className="rounded-full bg-blue-100 p-2 mb-3">
+                <Plus className="h-6 w-6 text-blue-600" />
               </div>
-              <h3 className="text-xl font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
                 No Teams Found
               </h3>
-              <p className="text-gray-600 text-center mb-6 max-w-md">
+              <p className="text-gray-600 text-center mb-4 max-w-md text-sm">
                 You need to create or join a team before you can manage tasks on
                 the Kanban board.
               </p>
               <Button
                 onClick={() => (window.location.href = "/dashboard/teams")}
+                size="sm"
               >
                 Go to Teams
               </Button>
@@ -276,46 +277,46 @@ export default function KanbanPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
+      <div className="border-b bg-white/90 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-                <div className="w-8 h-8 bg-blue-600 rounded mr-3 flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">KB</span>
+              <h1 className="text-xl font-bold text-gray-900 flex items-center">
+                <div className="w-6 h-6 bg-blue-600 rounded mr-2 flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">KB</span>
                 </div>
                 Kanban Board
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-gray-500 mt-0.5 text-sm">
                 Plan, track, and manage your team's work
               </p>
             </div>
 
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               <Button variant="outline" onClick={refetch} size="sm">
-                <RefreshCw className="mr-2 h-4 w-4" />
+                <RefreshCw className="mr-1 h-3 w-3" />
                 Refresh
               </Button>
               <Button onClick={() => handleCreateTask("todo")} size="sm">
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="mr-1 h-3 w-3" />
                 Create Issue
               </Button>
             </div>
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               <Select value={selectedTeamId} onValueChange={setSelectedTeamId}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-40 h-8 text-xs">
                   <SelectValue placeholder="Select team" />
                 </SelectTrigger>
                 <SelectContent>
                   {teams.map((team) => (
                     <SelectItem key={team.id} value={team.id}>
                       <div className="flex items-center">
-                        <div className="w-4 h-4 bg-blue-500 rounded-sm mr-2"></div>
+                        <div className="w-3 h-3 bg-blue-500 rounded-sm mr-2"></div>
                         {team.name}
                       </div>
                     </SelectItem>
@@ -327,8 +328,8 @@ export default function KanbanPage() {
                 value={selectedSprintId}
                 onValueChange={setSelectedSprintId}
               >
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Filter by sprint" />
+                <SelectTrigger className="w-40 h-8 text-xs">
+                  <SelectValue placeholder="All Tasks" />
                 </SelectTrigger>
                 <SelectContent>
                   {sprints.map((sprint) => (
@@ -340,18 +341,18 @@ export default function KanbanPage() {
               </Select>
             </div>
 
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
                 <Input
                   placeholder="Search issues..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-64"
+                  className="pl-7 w-48 h-8 text-xs"
                 />
               </div>
               <Button variant="outline" size="sm">
-                <Filter className="mr-2 h-4 w-4" />
+                <Filter className="mr-1 h-3 w-3" />
                 Filters
               </Button>
             </div>
@@ -360,31 +361,36 @@ export default function KanbanPage() {
       </div>
 
       {/* Kanban Board */}
-      <div className="p-6">
+      <div className="p-4">
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
             {columns.map((column) => (
-              <div key={column.id} className="space-y-4">
+              <div key={column.id} className="space-y-3">
                 {/* Column Header */}
                 <div
-                  className={`rounded-lg border-2 ${column.color} ${column.headerColor} p-4`}
+                  className={`rounded-lg border ${column.color} ${column.headerColor} p-3`}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <h3 className={`font-semibold ${column.textColor}`}>
+                    <div className="flex items-center space-x-2">
+                      <h3
+                        className={`font-semibold text-sm ${column.textColor}`}
+                      >
                         {column.title}
                       </h3>
-                      <Badge variant="secondary" className="bg-white/50">
+                      <Badge
+                        variant="secondary"
+                        className="bg-white/80 text-xs px-1.5 py-0.5"
+                      >
                         {getFilteredTasksByStatus(column.id).length}
                       </Badge>
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 p-0"
+                      className="h-5 w-5 p-0"
                       onClick={() => handleCreateTask(column.id)}
                     >
-                      <Plus className="h-4 w-4" />
+                      <Plus className="h-3 w-3" />
                     </Button>
                   </div>
                 </div>
@@ -395,7 +401,7 @@ export default function KanbanPage() {
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className={`space-y-3 min-h-[400px] p-2 rounded-lg transition-all duration-200 ${
+                      className={`space-y-2 min-h-[300px] p-1 rounded-lg transition-all duration-200 ${
                         snapshot.isDraggingOver
                           ? `${column.color} border-2 border-dashed shadow-inner`
                           : "bg-transparent"
@@ -413,25 +419,25 @@ export default function KanbanPage() {
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
-                                className={`cursor-pointer hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 ${
+                                className={`cursor-pointer hover:shadow-md transition-all duration-200 transform hover:-translate-y-0.5 ${
                                   snapshot.isDragging
-                                    ? "shadow-2xl rotate-3 bg-white z-50 ring-2 ring-blue-400"
+                                    ? "shadow-lg rotate-1 bg-white z-50 ring-2 ring-blue-400"
                                     : "bg-white hover:bg-gray-50"
                                 }`}
                                 onClick={() => handleTaskClick(task)}
                               >
-                                <CardContent className="p-4">
+                                <CardContent className="p-3">
                                   {/* Task Header */}
-                                  <div className="flex items-start justify-between mb-3">
-                                    <div className="flex items-center space-x-2">
-                                      <span className="text-lg">
+                                  <div className="flex items-start justify-between mb-2">
+                                    <div className="flex items-center space-x-1.5">
+                                      <span className="text-sm">
                                         {typeConfig[task.type].icon}
                                       </span>
                                       <Badge
                                         variant="outline"
                                         className={`${
                                           typeConfig[task.type].color
-                                        } border text-xs`}
+                                        } border text-xs px-1.5 py-0.5`}
                                       >
                                         {task.type.toUpperCase()}
                                       </Badge>
@@ -439,54 +445,54 @@ export default function KanbanPage() {
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
+                                      className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100"
                                     >
-                                      <MoreHorizontal className="h-4 w-4" />
+                                      <MoreHorizontal className="h-3 w-3" />
                                     </Button>
                                   </div>
 
                                   {/* Task Title */}
-                                  <h4 className="font-medium text-gray-900 mb-2 line-clamp-2 leading-snug">
+                                  <h4 className="font-medium text-gray-900 mb-1 line-clamp-2 leading-tight text-sm">
                                     {task.title}
                                   </h4>
 
                                   {/* Task Description */}
                                   {task.description && (
-                                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">
                                       {task.description}
                                     </p>
                                   )}
 
                                   {/* Task Metadata */}
-                                  <div className="flex items-center justify-between mt-3">
-                                    <div className="flex items-center space-x-2">
+                                  <div className="flex items-center justify-between mt-2">
+                                    <div className="flex items-center space-x-1.5">
                                       {/* Priority */}
                                       <Flag
-                                        className={`h-3 w-3 ${
+                                        className={`h-2.5 w-2.5 ${
                                           priorityConfig[task.priority].flag
                                         }`}
                                       />
 
                                       {/* Task ID */}
                                       <span className="text-xs text-gray-500 font-mono">
-                                        {task.id.slice(0, 8)}
+                                        {task.id.slice(0, 6)}
                                       </span>
 
                                       {/* Comments count */}
-                                      <div className="flex items-center space-x-1">
-                                        <MessageSquare className="h-3 w-3 text-gray-400" />
+                                      <div className="flex items-center space-x-0.5">
+                                        <MessageSquare className="h-2.5 w-2.5 text-gray-400" />
                                         <span className="text-xs text-gray-500">
                                           {task.commentCount}
                                         </span>
                                       </div>
                                     </div>
 
-                                    <div className="flex items-center space-x-2">
+                                    <div className="flex items-center space-x-1.5">
                                       {/* Story Points */}
                                       {task.story_points && (
                                         <Badge
                                           variant="outline"
-                                          className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                                          className="text-xs bg-blue-50 text-blue-700 border-blue-200 px-1.5 py-0.5"
                                         >
                                           {task.story_points}
                                         </Badge>
@@ -494,7 +500,7 @@ export default function KanbanPage() {
 
                                       {/* Assignee */}
                                       {task.assignee ? (
-                                        <Avatar className="h-6 w-6">
+                                        <Avatar className="h-5 w-5">
                                           <AvatarImage
                                             src={
                                               task.assignee.avatar ||
@@ -507,9 +513,9 @@ export default function KanbanPage() {
                                           </AvatarFallback>
                                         </Avatar>
                                       ) : (
-                                        <Avatar className="h-6 w-6">
+                                        <Avatar className="h-5 w-5">
                                           <AvatarFallback className="text-xs bg-gray-100 text-gray-400">
-                                            <User className="h-3 w-3" />
+                                            <User className="h-2.5 w-2.5" />
                                           </AvatarFallback>
                                         </Avatar>
                                       )}
@@ -517,35 +523,39 @@ export default function KanbanPage() {
                                   </div>
 
                                   {/* Due Date & Status Indicators */}
-                                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                                    <div className="flex items-center space-x-2">
-                                      {task.isBlocked && (
-                                        <div className="flex items-center space-x-1">
-                                          <AlertTriangle className="h-3 w-3 text-red-600" />
-                                          <span className="text-xs text-red-600 font-medium">
-                                            Blocked
-                                          </span>
-                                        </div>
-                                      )}
-                                      {task.isOverdue && (
-                                        <div className="flex items-center space-x-1">
-                                          <Clock className="h-3 w-3 text-orange-600" />
-                                          <span className="text-xs text-orange-600 font-medium">
-                                            Overdue
-                                          </span>
-                                        </div>
+                                  {(task.isBlocked ||
+                                    task.isOverdue ||
+                                    task.due_date) && (
+                                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+                                      <div className="flex items-center space-x-1.5">
+                                        {task.isBlocked && (
+                                          <div className="flex items-center space-x-0.5">
+                                            <AlertTriangle className="h-2.5 w-2.5 text-red-600" />
+                                            <span className="text-xs text-red-600 font-medium">
+                                              Blocked
+                                            </span>
+                                          </div>
+                                        )}
+                                        {task.isOverdue && (
+                                          <div className="flex items-center space-x-0.5">
+                                            <Clock className="h-2.5 w-2.5 text-orange-600" />
+                                            <span className="text-xs text-orange-600 font-medium">
+                                              Overdue
+                                            </span>
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      {task.due_date && (
+                                        <span className="text-xs text-gray-500">
+                                          Due{" "}
+                                          {new Date(
+                                            task.due_date
+                                          ).toLocaleDateString()}
+                                        </span>
                                       )}
                                     </div>
-
-                                    {task.due_date && (
-                                      <span className="text-xs text-gray-500">
-                                        Due{" "}
-                                        {new Date(
-                                          task.due_date
-                                        ).toLocaleDateString()}
-                                      </span>
-                                    )}
-                                  </div>
+                                  )}
                                 </CardContent>
                               </Card>
                             )}
@@ -557,10 +567,10 @@ export default function KanbanPage() {
                       {/* Add Task Button */}
                       <Button
                         variant="ghost"
-                        className="w-full justify-start text-gray-500 hover:text-gray-700 hover:bg-white/50 border-2 border-dashed border-gray-200 hover:border-gray-300 transition-all duration-200"
+                        className="w-full justify-start text-gray-500 hover:text-gray-700 hover:bg-white/50 border-2 border-dashed border-gray-200 hover:border-gray-300 transition-all duration-200 h-8 text-xs"
                         onClick={() => handleCreateTask(column.id)}
                       >
-                        <Plus className="mr-2 h-4 w-4" />
+                        <Plus className="mr-1 h-3 w-3" />
                         Create issue
                       </Button>
                     </div>

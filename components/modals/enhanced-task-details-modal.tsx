@@ -239,6 +239,8 @@ export function EnhancedTaskDetailsModal({
     if (!task) return;
 
     try {
+      console.log("Fetching comments for task:", task.id);
+
       const { data: commentsData, error } = await supabase
         .from("comments")
         .select(
@@ -246,11 +248,7 @@ export function EnhancedTaskDetailsModal({
           id,
           content,
           created_at,
-          user_id,
-          user_profiles(
-            full_name,
-            avatar_url
-          )
+          user_id
         `
         )
         .eq("task_id", task.id)
@@ -258,32 +256,63 @@ export function EnhancedTaskDetailsModal({
 
       if (error) {
         console.error("Error fetching comments:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load comments. Please try again.",
+          variant: "destructive",
+        });
         return;
       }
 
-      const formattedComments: Comment[] = (commentsData || []).map(
-        (comment: any) => ({
-          id: comment.id,
-          content: comment.content,
-          created_at: comment.created_at,
-          user_id: comment.user_id,
-          user: {
-            full_name: comment.user_profiles?.full_name || "Unknown User",
-            avatar_url: comment.user_profiles?.avatar_url || null,
-            initials: comment.user_profiles?.full_name
-              ? comment.user_profiles.full_name
-                  .split(" ")
-                  .map((n: string) => n[0])
-                  .join("")
-                  .toUpperCase()
-              : "U",
-          },
+      console.log("Comments data received:", commentsData);
+
+      // Fetch user profiles separately for each comment
+      const formattedComments: Comment[] = await Promise.all(
+        (commentsData || []).map(async (comment: any) => {
+          // Try to get user profile, fallback to basic info if not found
+          const { data: userProfile, error: profileError } = await supabase
+            .from("user_profiles")
+            .select("full_name, avatar_url")
+            .eq("id", comment.user_id)
+            .single();
+
+          if (profileError) {
+            console.warn(
+              "Could not fetch user profile for user:",
+              comment.user_id,
+              profileError
+            );
+          }
+
+          return {
+            id: comment.id,
+            content: comment.content,
+            created_at: comment.created_at,
+            user_id: comment.user_id,
+            user: {
+              full_name: userProfile?.full_name || "Unknown User",
+              avatar_url: userProfile?.avatar_url || null,
+              initials: userProfile?.full_name
+                ? userProfile.full_name
+                    .split(" ")
+                    .map((n: string) => n[0])
+                    .join("")
+                    .toUpperCase()
+                : "U",
+            },
+          };
         })
       );
 
+      console.log("Formatted comments:", formattedComments);
       setComments(formattedComments);
     } catch (error) {
       console.error("Error fetching comments:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load comments. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -291,16 +320,30 @@ export function EnhancedTaskDetailsModal({
     if (!task || !newComment.trim() || !user) return;
 
     try {
-      const { error } = await supabase.from("comments").insert([
-        {
-          task_id: task.id,
-          user_id: user.id,
-          content: newComment.trim(),
-        },
-      ]);
+      console.log("Adding comment for task:", task.id, "by user:", user.id);
 
-      if (error) throw error;
+      const { data, error } = await supabase
+        .from("comments")
+        .insert([
+          {
+            task_id: task.id,
+            user_id: user.id,
+            content: newComment.trim(),
+          },
+        ])
+        .select();
 
+      if (error) {
+        console.error("Error adding comment:", error);
+        toast({
+          title: "Error",
+          description: "Failed to add comment. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log("Comment added successfully:", data);
       setNewComment("");
       await fetchComments();
 
@@ -399,18 +442,18 @@ export function EnhancedTaskDetailsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] p-0 bg-white">
+      <DialogContent className="max-w-4xl max-h-[90vh] p-0 bg-white">
         <div className="flex h-full max-h-[85vh]">
           {/* Main Content */}
-          <div className="flex-1 p-6 overflow-y-auto">
-            <DialogHeader className="space-y-4">
+          <div className="flex-1 p-4 overflow-y-auto">
+            <DialogHeader className="space-y-3">
               <div className="flex items-start justify-between">
-                <div className="flex items-start space-x-3">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-100 text-xl">
+                <div className="flex items-start space-x-2">
+                  <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-100 text-lg">
                     {typeIcons[task.type]}
                   </div>
                   <div className="flex-1">
-                    <DialogTitle className="text-xl font-bold text-gray-900 mb-1">
+                    <DialogTitle className="text-lg font-bold text-gray-900 mb-1">
                       {isEditing ? (
                         <Input
                           value={editData.title}
@@ -420,21 +463,21 @@ export function EnhancedTaskDetailsModal({
                               title: e.target.value,
                             }))
                           }
-                          className="text-xl font-bold border-0 px-0 focus:ring-0 bg-transparent"
+                          className="text-lg font-bold border-0 px-0 focus:ring-0 bg-transparent h-7"
                         />
                       ) : (
                         task.title
                       )}
                     </DialogTitle>
-                    <div className="flex items-center space-x-2 text-sm text-gray-500">
+                    <div className="flex items-center space-x-2 text-xs text-gray-500">
                       <span className="flex items-center space-x-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                        <span className="w-1 h-1 rounded-full bg-blue-500"></span>
                         <span className="capitalize font-medium">
                           {task.type}
                         </span>
                       </span>
                       <span>•</span>
-                      <span className="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded">
+                      <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">
                         {task.id.slice(0, 8)}
                       </span>
                     </div>
@@ -446,12 +489,12 @@ export function EnhancedTaskDetailsModal({
                     variant="ghost"
                     size="sm"
                     onClick={() => setIsEditing(!isEditing)}
-                    className="h-8 w-8 rounded-lg hover:bg-gray-100"
+                    className="h-7 w-7 rounded-lg hover:bg-gray-100"
                   >
                     {isEditing ? (
-                      <X className="w-4 h-4" />
+                      <X className="w-3 h-3" />
                     ) : (
-                      <Edit3 className="w-4 h-4" />
+                      <Edit3 className="w-3 h-3" />
                     )}
                   </Button>
                   <DropdownMenu>
@@ -459,22 +502,22 @@ export function EnhancedTaskDetailsModal({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 w-8 rounded-lg hover:bg-gray-100"
+                        className="h-7 w-7 rounded-lg hover:bg-gray-100"
                       >
-                        <MoreHorizontal className="w-4 h-4" />
+                        <MoreHorizontal className="w-3 h-3" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-40">
+                    <DropdownMenuContent align="end" className="w-36">
                       <DropdownMenuItem>
-                        <Link className="w-4 h-4 mr-2" />
+                        <Link className="w-3 h-3 mr-2" />
                         Copy link
                       </DropdownMenuItem>
                       <DropdownMenuItem>
-                        <Bookmark className="w-4 h-4 mr-2" />
+                        <Bookmark className="w-3 h-3 mr-2" />
                         Watch
                       </DropdownMenuItem>
                       <DropdownMenuItem className="text-red-600">
-                        <Trash2 className="w-4 h-4 mr-2" />
+                        <Trash2 className="w-3 h-3 mr-2" />
                         Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -483,11 +526,11 @@ export function EnhancedTaskDetailsModal({
               </div>
             </DialogHeader>
 
-            <div className="mt-6 space-y-6">
+            <div className="mt-4 space-y-4">
               {/* Description */}
               <div className="space-y-2">
-                <Label className="text-sm font-semibold text-gray-900 flex items-center space-x-2">
-                  <div className="w-0.5 h-4 bg-blue-500 rounded-full"></div>
+                <Label className="text-xs font-semibold text-gray-900 flex items-center space-x-1.5">
+                  <div className="w-0.5 h-3 bg-blue-500 rounded-full"></div>
                   <span>Description</span>
                 </Label>
                 <div>
@@ -501,10 +544,10 @@ export function EnhancedTaskDetailsModal({
                         }))
                       }
                       placeholder="Add a description..."
-                      className="min-h-[80px] border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 text-sm"
+                      className="min-h-[60px] border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 text-xs"
                     />
                   ) : (
-                    <div className="text-sm text-gray-700 bg-gray-50/50 rounded-lg p-3 min-h-[80px] border border-gray-100">
+                    <div className="text-xs text-gray-700 bg-gray-50/50 rounded-lg p-2 min-h-[60px] border border-gray-100">
                       {task.description || (
                         <span className="text-gray-400 italic">
                           No description provided
@@ -516,43 +559,43 @@ export function EnhancedTaskDetailsModal({
               </div>
 
               {/* Comments Section */}
-              <div className="space-y-3">
-                <Label className="text-sm font-semibold text-gray-900 flex items-center space-x-2">
-                  <div className="w-0.5 h-4 bg-emerald-500 rounded-full"></div>
-                  <MessageSquare className="w-4 h-4 text-emerald-600" />
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-gray-900 flex items-center space-x-1.5">
+                  <div className="w-0.5 h-3 bg-emerald-500 rounded-full"></div>
+                  <MessageSquare className="w-3 h-3 text-emerald-600" />
                   <span>Comments</span>
                   <Badge
                     variant="secondary"
-                    className="ml-1 bg-emerald-50 text-emerald-700 border-emerald-200 text-xs"
+                    className="ml-1 bg-emerald-50 text-emerald-700 border-emerald-200 text-xs px-1.5 py-0.5"
                   >
                     {comments.length}
                   </Badge>
                 </Label>
 
                 {/* Add Comment */}
-                <div className="bg-white border border-gray-200 rounded-lg p-3">
-                  <div className="flex space-x-3">
-                    <Avatar className="h-8 w-8 ring-1 ring-blue-100">
+                <div className="bg-white border border-gray-200 rounded-lg p-2">
+                  <div className="flex space-x-2">
+                    <Avatar className="h-6 w-6 ring-1 ring-blue-100">
                       <AvatarImage src={user?.user_metadata?.avatar_url} />
-                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-sm">
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-xs">
                         {user?.user_metadata?.full_name?.charAt(0) || "U"}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex-1 space-y-2">
+                    <div className="flex-1 space-y-1.5">
                       <Textarea
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
                         placeholder="Write a comment..."
-                        className="min-h-[60px] border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 resize-none text-sm"
+                        className="min-h-[40px] border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 resize-none text-xs"
                       />
                       <div className="flex justify-end">
                         <Button
                           size="sm"
                           onClick={addComment}
                           disabled={!newComment.trim()}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-4"
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 h-6 text-xs"
                         >
-                          <MessageSquare className="w-4 h-4 mr-1" />
+                          <MessageSquare className="w-3 h-3 mr-1" />
                           Comment
                         </Button>
                       </div>
@@ -562,15 +605,15 @@ export function EnhancedTaskDetailsModal({
 
                 {/* Comments List */}
                 {comments.length > 0 ? (
-                  <ScrollArea className="max-h-[400px] pr-2">
-                    <div className="space-y-3">
+                  <ScrollArea className="max-h-[300px] pr-1">
+                    <div className="space-y-2">
                       {comments.map((comment, index) => (
                         <div key={comment.id} className="relative">
                           {index !== comments.length - 1 && (
-                            <div className="absolute left-4 top-10 bottom-0 w-px bg-gray-200"></div>
+                            <div className="absolute left-3 top-8 bottom-0 w-px bg-gray-200"></div>
                           )}
-                          <div className="flex space-x-3">
-                            <Avatar className="h-8 w-8 ring-1 ring-gray-100 relative z-10 bg-white">
+                          <div className="flex space-x-2">
+                            <Avatar className="h-6 w-6 ring-1 ring-gray-100 relative z-10 bg-white">
                               <AvatarImage
                                 src={comment.user.avatar_url || undefined}
                               />
@@ -579,16 +622,16 @@ export function EnhancedTaskDetailsModal({
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0">
-                              <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow duration-200">
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="font-medium text-gray-900 text-sm">
+                              <div className="bg-white border border-gray-200 rounded-lg p-2 shadow-sm hover:shadow-md transition-shadow duration-200">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="font-medium text-gray-900 text-xs">
                                     {comment.user.full_name}
                                   </span>
                                   <time className="text-xs text-gray-500">
                                     {formatDate(comment.created_at)}
                                   </time>
                                 </div>
-                                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
+                                <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
                                   {comment.content}
                                 </p>
                               </div>
@@ -599,9 +642,9 @@ export function EnhancedTaskDetailsModal({
                     </div>
                   </ScrollArea>
                 ) : (
-                  <div className="text-center py-8">
-                    <MessageSquare className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                    <p className="text-gray-500 font-medium text-sm">
+                  <div className="text-center py-6">
+                    <MessageSquare className="w-6 h-6 text-gray-300 mx-auto mb-1" />
+                    <p className="text-gray-500 font-medium text-xs">
                       No comments yet
                     </p>
                     <p className="text-gray-400 text-xs">
@@ -612,11 +655,12 @@ export function EnhancedTaskDetailsModal({
               </div>
 
               {isEditing && (
-                <div className="flex justify-end space-x-2 pt-4 border-t border-gray-200">
+                <div className="flex justify-end space-x-2 pt-3 border-t border-gray-200">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setIsEditing(false)}
+                    className="h-7 text-xs"
                   >
                     Cancel
                   </Button>
@@ -624,9 +668,9 @@ export function EnhancedTaskDetailsModal({
                     size="sm"
                     onClick={handleSave}
                     disabled={loading}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    className="bg-blue-600 hover:bg-blue-700 text-white h-7 text-xs"
                   >
-                    <Save className="w-4 h-4 mr-1" />
+                    <Save className="w-3 h-3 mr-1" />
                     Save
                   </Button>
                 </div>
@@ -635,10 +679,10 @@ export function EnhancedTaskDetailsModal({
           </div>
 
           {/* Sidebar */}
-          <div className="w-72 bg-gradient-to-b from-gray-50 to-gray-100/50 border-l border-gray-200 p-4 overflow-y-auto">
-            <div className="space-y-4">
+          <div className="w-60 bg-gradient-to-b from-gray-50 to-gray-100/50 border-l border-gray-200 p-3 overflow-y-auto">
+            <div className="space-y-3">
               {/* Status */}
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-gray-900 uppercase tracking-wider">
                   Status
                 </Label>
@@ -653,7 +697,7 @@ export function EnhancedTaskDetailsModal({
                         }))
                       }
                     >
-                      <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-8">
+                      <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -667,7 +711,7 @@ export function EnhancedTaskDetailsModal({
                     <Badge
                       className={`${
                         statusColors[task.status]
-                      } border px-2 py-1 text-xs font-medium`}
+                      } border px-2 py-0.5 text-xs font-medium`}
                     >
                       {statusLabels[task.status]}
                     </Badge>
@@ -676,7 +720,7 @@ export function EnhancedTaskDetailsModal({
               </div>
 
               {/* Priority */}
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-gray-900 uppercase tracking-wider">
                   Priority
                 </Label>
@@ -691,25 +735,25 @@ export function EnhancedTaskDetailsModal({
                         }))
                       }
                     >
-                      <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-8">
+                      <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="low">
                           <div className="flex items-center">
-                            <Flag className="w-4 h-4 mr-2 text-green-600" />
+                            <Flag className="w-3 h-3 mr-1.5 text-green-600" />
                             Low
                           </div>
                         </SelectItem>
                         <SelectItem value="medium">
                           <div className="flex items-center">
-                            <Flag className="w-4 h-4 mr-2 text-orange-600" />
+                            <Flag className="w-3 h-3 mr-1.5 text-orange-600" />
                             Medium
                           </div>
                         </SelectItem>
                         <SelectItem value="high">
                           <div className="flex items-center">
-                            <Flag className="w-4 h-4 mr-2 text-red-600" />
+                            <Flag className="w-3 h-3 mr-1.5 text-red-600" />
                             High
                           </div>
                         </SelectItem>
@@ -719,9 +763,9 @@ export function EnhancedTaskDetailsModal({
                     <Badge
                       className={`${
                         priorityColors[task.priority]
-                      } border px-2 py-1 text-xs font-medium capitalize`}
+                      } border px-2 py-0.5 text-xs font-medium capitalize`}
                     >
-                      <Flag className="w-3 h-3 mr-1" />
+                      <Flag className="w-2.5 h-2.5 mr-1" />
                       {task.priority}
                     </Badge>
                   )}
@@ -729,7 +773,7 @@ export function EnhancedTaskDetailsModal({
               </div>
 
               {/* Assignee */}
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-gray-900 uppercase tracking-wider">
                   Assignee
                 </Label>
@@ -744,7 +788,7 @@ export function EnhancedTaskDetailsModal({
                         }))
                       }
                     >
-                      <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-8">
+                      <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs">
                         <SelectValue placeholder="Unassigned" />
                       </SelectTrigger>
                       <SelectContent>
@@ -752,7 +796,7 @@ export function EnhancedTaskDetailsModal({
                         {teamMembers.map((member) => (
                           <SelectItem key={member.id} value={member.id}>
                             <div className="flex items-center">
-                              <Avatar className="w-5 h-5 mr-2">
+                              <Avatar className="w-4 h-4 mr-1.5">
                                 <AvatarImage src={member.avatar || undefined} />
                                 <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">
                                   {member.initials}
@@ -765,10 +809,10 @@ export function EnhancedTaskDetailsModal({
                       </SelectContent>
                     </Select>
                   ) : (
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-1.5">
                       {task.assignee ? (
                         <>
-                          <Avatar className="w-6 h-6 ring-1 ring-gray-200">
+                          <Avatar className="w-5 h-5 ring-1 ring-gray-200">
                             <AvatarImage
                               src={task.assignee.avatar || undefined}
                             />
@@ -777,19 +821,19 @@ export function EnhancedTaskDetailsModal({
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium text-gray-900 text-sm">
+                            <p className="font-medium text-gray-900 text-xs">
                               {task.assignee.name}
                             </p>
                             <p className="text-xs text-gray-500">Assigned</p>
                           </div>
                         </>
                       ) : (
-                        <div className="flex items-center space-x-2">
-                          <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
-                            <User className="w-3 h-3 text-gray-400" />
+                        <div className="flex items-center space-x-1.5">
+                          <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center">
+                            <User className="w-2.5 h-2.5 text-gray-400" />
                           </div>
                           <div>
-                            <p className="font-medium text-gray-500 text-sm">
+                            <p className="font-medium text-gray-500 text-xs">
                               Unassigned
                             </p>
                             <p className="text-xs text-gray-400">No assignee</p>
@@ -802,7 +846,7 @@ export function EnhancedTaskDetailsModal({
               </div>
 
               {/* Story Points */}
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-gray-900 uppercase tracking-wider">
                   Story Points
                 </Label>
@@ -818,14 +862,14 @@ export function EnhancedTaskDetailsModal({
                         }))
                       }
                       placeholder="0"
-                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-8"
+                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs"
                     />
                   ) : (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center">
-                        <Target className="w-3 h-3 text-blue-600" />
+                    <div className="flex items-center space-x-1.5">
+                      <div className="w-5 h-5 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <Target className="w-2.5 h-2.5 text-blue-600" />
                       </div>
-                      <span className="font-medium text-gray-900 text-sm">
+                      <span className="font-medium text-gray-900 text-xs">
                         {task.story_points || "Not estimated"}
                       </span>
                     </div>
@@ -834,7 +878,7 @@ export function EnhancedTaskDetailsModal({
               </div>
 
               {/* Due Date */}
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-gray-900 uppercase tracking-wider">
                   Due Date
                 </Label>
@@ -849,15 +893,15 @@ export function EnhancedTaskDetailsModal({
                           due_date: e.target.value,
                         }))
                       }
-                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-8"
+                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs"
                     />
                   ) : (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-6 h-6 rounded-lg bg-orange-100 flex items-center justify-center">
-                        <Calendar className="w-3 h-3 text-orange-600" />
+                    <div className="flex items-center space-x-1.5">
+                      <div className="w-5 h-5 rounded-lg bg-orange-100 flex items-center justify-center">
+                        <Calendar className="w-2.5 h-2.5 text-orange-600" />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900 text-sm">
+                        <p className="font-medium text-gray-900 text-xs">
                           {task.due_date
                             ? new Date(task.due_date).toLocaleDateString()
                             : "No due date"}
@@ -878,13 +922,13 @@ export function EnhancedTaskDetailsModal({
               <Separator className="bg-gray-300" />
 
               {/* Metadata */}
-              <div className="space-y-3">
-                <div className="space-y-1">
+              <div className="space-y-2">
+                <div className="space-y-0.5">
                   <Label className="text-xs font-semibold text-gray-900 uppercase tracking-wider">
                     Created
                   </Label>
                   <div className="flex items-center space-x-1">
-                    <Clock className="w-3 h-3 text-gray-400" />
+                    <Clock className="w-2.5 h-2.5 text-gray-400" />
                     <span className="text-xs text-gray-600">
                       {formatDate(task.created_at)}
                     </span>
@@ -892,12 +936,12 @@ export function EnhancedTaskDetailsModal({
                 </div>
 
                 {task.updated_at && (
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     <Label className="text-xs font-semibold text-gray-900 uppercase tracking-wider">
                       Last Updated
                     </Label>
                     <div className="flex items-center space-x-1">
-                      <Activity className="w-3 h-3 text-gray-400" />
+                      <Activity className="w-2.5 h-2.5 text-gray-400" />
                       <span className="text-xs text-gray-600">
                         {formatDate(task.updated_at)}
                       </span>
