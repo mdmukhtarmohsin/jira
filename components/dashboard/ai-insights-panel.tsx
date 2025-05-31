@@ -764,16 +764,11 @@ export function AiInsightsPanel() {
                             Recently added tasks:
                           </p>
                           <ul className="text-xs space-y-1">
-                            {alert.addedTasks.slice(0, 3).map((task, idx) => (
+                            {alert.addedTasks.map((task, idx) => (
                               <li key={idx} className="text-gray-700">
                                 • {task}
                               </li>
                             ))}
-                            {alert.addedTasks.length > 3 && (
-                              <li className="text-gray-500">
-                                ... and {alert.addedTasks.length - 3} more
-                              </li>
-                            )}
                           </ul>
                         </div>
                       )}
