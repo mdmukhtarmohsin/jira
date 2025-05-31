@@ -1,0 +1,297 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# 📄 Product Requirements Document (PRD)
+
+## 🎠 Project Title
+
+**Jira Clone with AI Sprint Negotiator & Auto Risk Analyzer**
+
+---
+
+## 1. Product Overview
+
+A Kanban and sprint-based project management tool inspired by Jira. Supports backlog grooming, sprint planning, task tracking, retrospectives, multi-team collaboration, and organization-based user management. Integrates AI to enhance productivity, automate sprint workflows, and identify risks.
+
+---
+
+## 2. Core Modules and Features
+
+### 🛡️ 1. Organization & User Onboarding
+
+#### Features:
+
+* New users create an organization during signup if no invite is present
+* Users signing up via invite links are auto-added to the inviter's organization (invitation carries org ID)
+* Users cannot belong to multiple organizations
+* Users can belong to one or more teams within an org
+
+---
+
+### 👥 2. Teams & Projects
+
+#### Features:
+
+* Users can create multiple teams within an organization
+* Each team can manage its own sprints, tasks, and boards independently
+* Projects are treated as labels or filters to group tasks across teams
+* Projects and teams are not interdependent
+
+---
+
+### 🗕️ 3. Backlog View
+
+#### Features:
+
+* Upcoming tasks (stories, bugs, tasks, epics)
+* Drag-and-drop reordering
+* Group by epics; filter by labels, priority, assignee, status, and project
+
+---
+
+### 🚀 4. Sprint Management
+
+#### Features:
+
+* Sprint creation per team (name, start/end date)
+* Assign tasks from backlog
+* View sprint progress (burndown chart optional)
+
+#### AI Invocation:
+
+* 🤖 **Sprint Negotiator AI**
+
+  * **Trigger:** User clicks "Suggest Sprint Plan"
+  * **Input:** Backlog tasks, team capacity (set by Admin using Fibonacci story points), AI-inferred priority
+  * **Output:** Optimized sprint plan with assigned workload, matching backend model format:
+
+    ```json
+    {
+      "sprint": {
+        "name": "Sprint 12",
+        "startDate": "2025-06-01",
+        "endDate": "2025-06-15",
+        "tasks": [
+          {"id": "task123", "assignee": "user1", "storyPoints": 5, "priority": "High"},
+          {"id": "task456", "assignee": "user2", "storyPoints": 3, "priority": "Medium"}
+        ]
+      }
+    }
+    ```
+
+    *Priority Enum: "High", "Medium", "Low"*
+  * **UX:** Presented as a preview, user can edit and approve
+
+---
+
+### 🗖️ 5. Kanban Task Board
+
+#### Features:
+
+* Columns: To Do, In Progress, In Review, Done (customizable)
+* Drag-and-drop workflow
+* Task panel with:
+
+  * Title, description
+  * Type (bug, story, task)
+  * Status, assignee, due date, priority, story points
+  * Labels, project, attachments, comments
+
+---
+
+### 📄 6. Epics & Task Hierarchies
+
+#### Features:
+
+* Create/manage epics
+* Link tasks to epics
+* View % completion per epic
+
+---
+
+### 🌐 7. Filters, Labels, and Comments
+
+#### Features:
+
+* Add customizable labels
+* Filter tasks by labels, users, sprint, project, status
+* Comment threads and mentions (@user)
+
+---
+
+### 💼 8. Notifications
+
+#### Features:
+
+* Real-time alerts for mentions, updates, AI actions
+* Team-wide or personal feed
+* Powered by Supabase real-time subscriptions
+
+---
+
+### 📈 9. AI Add-Ons
+
+#### 🤖 A. Sprint Negotiator
+
+* **Trigger:** Click "Suggest Sprint Plan"
+* **Inputs:** Upcoming tasks, user capacities (story points), inferred priority
+* **Output:** Feasible sprint distribution plan (see structured JSON format above)
+
+#### ⚠️ B. Scope Creep Detector
+
+* **Trigger:** When task added to active sprint
+* **Inputs:** Sprint start date, task timestamps
+* **Output:** Warn if >15% increase in scope (based on total story points) is detected
+
+#### 🌡️ C. Risk Heatmap Generator
+
+* **Trigger:** Render Kanban board
+* **Inputs:** Assignee workload, deadlines, manually marked or AI-inferred blockers
+* **Output:** Highlights overloaded members (e.g., >5 tasks or clustered deadlines) or delayed tasks
+* **Blocker Inference:** If no blocker is explicitly marked, infer from comments containing terms such as *"blocked", "waiting", "unclear", "dependency", "delay"*
+
+#### 📜 D. Retrospective Generator
+
+* **Trigger:** On sprint completion
+* **Inputs:** Completion stats, delay logs, blockers
+* **Output:** Auto-generated retrospective markdown (editable) in structured format:
+
+  ```md
+  ## 🟢 What went well
+  - Tasks were completed on time
+
+  ## 🔴 What didn't go well
+  - Two tasks were blocked due to unclear requirements
+
+  ## 🛠 Action items
+  - Improve specification review process
+  ```
+* **Storage:** Saved in dedicated retrospectives view
+
+---
+
+### 🔐 10. RBAC & Access Control
+
+#### Roles:
+
+* **Admin** (org-level only): Create orgs/teams, manage settings, full access to all teams within organization
+* **Member**: Join teams, create/edit tasks, participate in sprints, manage own team's sprints and boards
+* **AI**: Backend-only actions
+* No team-level admins, guests, or read-only roles
+
+---
+
+## 3. Technical Stack
+
+| Layer           | Technology                     |
+| --------------- | ------------------------------ |
+| **Framework**   | Next.js 14 (App Router) + TS   |
+| **UI/Styling**  | TailwindCSS + shadcn/ui        |
+| **Drag & Drop** | @hello-pangea/dnd              |
+| **State Mgmt**  | React Query + Zustand          |
+| **Forms**       | React Hook Form + Zod          |
+| **Database**    | Supabase (PostgreSQL)          |
+| **Auth**        | Supabase Auth                  |
+| **ORM**         | Supabase client + RLS policies |
+| **AI Layer**    | Google Gemini API              |
+| **Real-time**   | Supabase real-time             |
+| **File Upload** | Supabase Storage               |
+| **Email**       | Supabase Email + SMTP          |
+| **Deployment**  | Vercel                         |
+
+### **Cost Structure:**
+
+* **Development:** \$0 (Supabase + Gemini free tiers)
+* **Production (small-medium):** \$0–25/month
+* **Gemini API:** Free (15 requests/minute) → \$0.50 per 1M tokens if needed
+
+---
+
+## 4. User Flows
+
+### A. Signup & Org Creation
+
+1. User signs up
+2. If no invite: Org is created automatically, user becomes Admin
+3. If via invite: Added to existing org as Member (org ID used)
+
+### B. Team Setup & Sprint Flow
+
+1. Admin or Member creates team
+2. Adds members to team
+3. Creates tasks in backlog
+4. Starts sprint or uses "Suggest Sprint Plan" (AI)
+5. Executes sprint via Kanban
+6. Completes sprint → AI retrospective
+
+### C. Mid-Sprint Monitoring
+
+* On new task: AI runs scope creep check
+* On Kanban render: AI runs risk heatmap
+
+### D. Sprint Wrap-up
+
+* On closing sprint: AI auto-generates retrospective markdown (editable, stored)
+
+---
+
+## 5. Technical Implementation Details
+
+### **AI Integration Example:**
+
+```typescript
+// Gemini API integration
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+export async function generateSprintPlan(tasks: Task[], capacity: number) {
+  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  
+  const prompt = `Given these tasks: ${JSON.stringify(tasks)} 
+  and team capacity: ${capacity} story points, 
+  suggest an optimal sprint plan...`;
+  
+  const result = await model.generateContent(prompt);
+  return JSON.parse(result.response.text());
+}
+```
+
+### **Real-time Updates:**
+
+```typescript
+// Supabase real-time subscription
+const { data, error } = supabase
+  .from('tasks')
+  .on('*', payload => {
+    // Update UI in real-time
+    updateTaskBoard(payload);
+  })
+  .subscribe();
+```
+
+---
+
+## 6. Milestones
+
+| Week | Deliverables                                   |
+| ---- | ---------------------------------------------- |
+| 1    | Project setup, Auth, Org/Team setup, Task CRUD |
+| 2    | Kanban board, Epics, Labels, Comments          |
+| 3    | Sprint engine, AI: Sprint Negotiator           |
+| 4    | AI: Scope Detector, Heatmap, Retrospective     |
+| 5    | Real-time features, Deployment, Documentation  |
+
+---
+
+## 7. Success Metrics
+
+* 🧠 75% of teams use AI-generated sprint plans
+* ⚠️ 90% accuracy of scope creep warnings
+* 🔥 Heatmap flags accurate overloads in test cases
+* 📜 80% usage of auto-retrospectives per sprint
+* 💰 Stay within free tier limits for first 100 users
+
+---

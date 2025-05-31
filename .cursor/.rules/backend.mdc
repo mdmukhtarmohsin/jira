@@ -1,0 +1,308 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# 📦 Backend Product Requirements Document (PRD)
+
+## 🧩 Project Context
+
+This backend PRD is based on the product requirements for the **Jira Clone with AI Sprint Negotiator & Auto Risk Analyzer**. The backend is built using **Next.js 14 (App Router)** and **Supabase** for database, authentication, real-time subscriptions, and storage.
+
+---
+
+## 1. Architecture Overview
+
+* **Platform**: Next.js (App Router + API Routes)
+* **Database**: Supabase (PostgreSQL)
+* **Authentication**: Supabase Auth (email/password, magic link, OAuth support)
+* **Storage**: Supabase Storage (file uploads)
+* **Real-time**: Supabase real-time channels
+* **AI Integration**: Google Gemini API
+* **ORM / Queries**: Supabase client + RLS (Row-Level Security) policies
+
+---
+
+## 2. Database Schema
+
+### A. Organizations
+
+```sql
+Table: organizations
+- id (uuid, PK)
+- name (text)
+- created_at (timestamp)
+```
+
+### B. Users
+
+```sql
+Table: users (managed by Supabase Auth)
+- id (uuid, PK)
+- email (text)
+- full_name (text)
+```
+
+### C. Organization Membership
+
+```sql
+Table: organization_members
+- user_id (uuid, FK)
+- organization_id (uuid, FK)
+- role (enum: 'admin', 'member')
+- PRIMARY KEY (user_id, organization_id)
+```
+
+### D. Teams
+
+```sql
+Table: teams
+- id (uuid, PK)
+- organization_id (uuid, FK)
+- name (text)
+```
+
+### E. Team Membership
+
+```sql
+Table: team_members
+- user_id (uuid, FK)
+- team_id (uuid, FK)
+- PRIMARY KEY (user_id, team_id)
+```
+
+### F. Projects
+
+```sql
+Table: projects
+- id (uuid, PK)
+- organization_id (uuid, FK)
+- name (text)
+```
+
+### G. Epics
+
+```sql
+Table: epics
+- id (uuid, PK)
+- team_id (uuid, FK)
+- title (text)
+- description (text)
+- status (enum)
+- created_at (timestamp)
+```
+
+### H. Tasks
+
+```sql
+Table: tasks
+- id (uuid, PK)
+- team_id (uuid, FK)
+- title (text)
+- description (text)
+- type (enum: 'bug', 'story', 'task')
+- status (enum: 'todo', 'in_progress', 'review', 'done')
+- priority (enum: 'low', 'medium', 'high')
+- story_points (int)
+- epic_id (uuid, FK, nullable)
+- assignee_id (uuid, FK to users, nullable)
+- project_id (uuid, FK)
+- due_date (date)
+- created_at (timestamp)
+```
+
+### I. Labels
+
+```sql
+Table: labels
+- id (uuid, PK)
+- team_id (uuid, FK)
+- name (text)
+- color (text)
+```
+
+### J. Task Labels
+
+```sql
+Table: task_labels
+- task_id (uuid, FK)
+- label_id (uuid, FK)
+- PRIMARY KEY (task_id, label_id)
+```
+
+### K. Comments
+
+```sql
+Table: comments
+- id (uuid, PK)
+- task_id (uuid, FK)
+- user_id (uuid, FK)
+- content (text)
+- created_at (timestamp)
+```
+
+### L. Sprints
+
+```sql
+Table: sprints
+- id (uuid, PK)
+- team_id (uuid, FK)
+- name (text)
+- start_date (date)
+- end_date (date)
+- created_at (timestamp)
+```
+
+### M. Sprint Tasks
+
+```sql
+Table: sprint_tasks
+- sprint_id (uuid, FK)
+- task_id (uuid, FK)
+- PRIMARY KEY (sprint_id, task_id)
+```
+
+### N. Retrospectives
+
+```sql
+Table: retrospectives
+- id (uuid, PK)
+- sprint_id (uuid, FK)
+- content (text in markdown)
+- created_at (timestamp)
+```
+
+---
+
+## 3. API Endpoints (REST-style via Next.js API routes)
+
+### Auth
+
+* `POST /api/auth/signup`
+* `POST /api/auth/signin`
+* `GET /api/auth/session`
+
+### Organizations
+
+* `POST /api/org`
+* `GET /api/org`
+* `POST /api/org/invite`
+
+### Teams
+
+* `POST /api/team`
+* `GET /api/team/:id`
+* `GET /api/team/:id/members`
+
+### Projects, Epics, Labels
+
+* `POST /api/project`
+* `GET /api/projects`
+* `POST /api/epic`
+* `GET /api/epics`
+* `POST /api/label`
+
+### Tasks
+
+* `POST /api/task`
+* `PATCH /api/task/:id`
+* `GET /api/task/:id`
+* `GET /api/team/:teamId/tasks`
+
+### Comments
+
+* `POST /api/comment`
+* `GET /api/task/:taskId/comments`
+
+### Sprints
+
+* `POST /api/sprint`
+* `GET /api/sprint/:id`
+* `POST /api/sprint/:id/add-task`
+* `POST /api/sprint/:id/close`
+
+### Retrospectives
+
+* `GET /api/retrospective/:sprintId`
+* `POST /api/retrospective/:sprintId`
+
+### AI Services
+
+* `POST /api/ai/sprint-plan`
+* `POST /api/ai/scope-check`
+* `POST /api/ai/risk-heatmap`
+* `POST /api/ai/retrospective`
+
+---
+
+## 4. Permissions & RLS
+
+### Row-Level Security (Supabase)
+
+* Enforced per org/team context
+* Authenticated users can only query org/team entities they belong to
+* Separate RLS policies for roles: admin vs member
+
+---
+
+## 5. Real-time
+
+* Supabase channels used to broadcast task updates, comments, sprint progress, mentions
+* `supabase.from('tasks').on('*')` for Kanban
+* `supabase.from('comments').on('INSERT')` for threads
+
+---
+
+## 6. File Uploads
+
+* Use Supabase Storage
+* Uploads linked to task IDs
+* Accessible via signed URLs
+* RLS ensures only team members can upload/view
+
+---
+
+## 7. AI Integration
+
+Handled through API routes proxying Google Gemini:
+
+* Prompt templates based on PRD section 2.9
+* Secure .env access to API keys
+* Responses parsed into strict JSON schemas
+
+---
+
+## 8. Monitoring & Logging
+
+* Use Vercel logs + Supabase logs
+* Errors on AI calls logged to Supabase `ai_logs` table:
+
+```sql
+Table: ai_logs
+- id (uuid)
+- type (enum: sprint_plan, scope_check, heatmap, retrospective)
+- input (json)
+- output (json)
+- error (text)
+- timestamp (timestamp)
+```
+
+---
+
+## 9. Deployment
+
+* Hosted on Vercel
+* Environment variables for Supabase and Gemini API keys
+* Zero-downtime preview deployments
+
+---
+
+## 10. Milestones (Backend)
+
+| Week | Backend Deliverables                    |
+| ---- | --------------------------------------- |
+| 1    | Auth, Org/Team schemas + APIs           |
+| 2    | Task CRUD, Labels, Comments, Projects   |
+| 3    | Sprint APIs, AI Sprint Negotiator       |
+| 4    | AI: Scope Check, Heatmap, Retrospective |
+| 5    | Real-time, RLS, Uploads, Final QA       |

@@ -1,0 +1,184 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# 🧑‍💻 Frontend Product Requirements Document (PRD)
+
+## 🎠 Project Title
+
+**Jira Clone with AI Sprint Negotiator & Auto Risk Analyzer**
+
+---
+
+## 1. Design Philosophy
+
+* Maintain a familiar, enterprise-grade UX modeled after Atlassian Jira
+* Prioritize clarity, productivity, and responsiveness across devices
+* AI capabilities should be native and non-intrusive
+
+---
+
+## 2. Color & Theme Guidelines
+
+| Element       | Color (Hex) | Notes                           |
+| ------------- | ----------- | ------------------------------- |
+| Primary Blue  | `#0052CC`   | Main CTA buttons, highlights    |
+| Accent Orange | `#FF5630`   | Warnings, blocker indicators    |
+| Success Green | `#36B37E`   | Completion, success statuses    |
+| Gray-100      | `#F4F5F7`   | Backgrounds, neutral containers |
+| Text Dark     | `#172B4D`   | Default text color              |
+| Text Light    | `#6B778C`   | Hints, placeholders             |
+
+Font: `Inter` or `Open Sans`
+
+TailwindCSS with custom config overrides as needed.
+
+---
+
+## 3. Frontend Modules & Pages
+
+### 🏠 1. Landing Page
+
+#### Goal:
+
+Convert visitors into users by showcasing AI sprint planning, Kanban productivity, and risk analytics with Jira-like styling.
+
+#### Sections:
+
+* **Hero**: Headline, subheading, CTA (`Start Free`, `Try Demo`)
+* **Problem/Solution**: Comparison between manual vs AI-automated sprint planning
+* **Features**: Cards for Sprint Negotiator, Risk Heatmap, Scope Detector, Retrospective Generator
+* **Demo Preview**: Swipeable carousel or video/gif preview
+* **Testimonials**: Optional
+* **Pricing**: Emphasize free tier, list expected limits
+* **Footer**: Links to docs, GitHub, privacy, login
+
+#### Components:
+
+* `<Hero />`
+* `<FeatureCard />`
+* `<DemoCarousel />`
+* `<PricingBox />`
+* `<CTAFooter />`
+
+Responsive design with Tailwind Grid, large CTAs, accessible ARIA tags.
+
+---
+
+### 🛂 2. Auth & Onboarding Pages
+
+* **Login / Signup**
+* **Invite-based org join page**
+* **Post-signup team creation & task onboarding**
+
+---
+
+### 🧭 3. Dashboard Layout
+
+Main app shell once logged in:
+
+* Sidebar (Teams, Projects, Sprints, Settings)
+* Header (Notifications, User Menu)
+* Page container (renders views)
+
+---
+
+### 📋 4. Backlog View
+
+* Task list (grouped by epic)
+* Filters (assignee, priority, label, project)
+* Drag-and-drop reordering
+
+---
+
+### 📅 5. Sprint Planning View
+
+* List of unassigned backlog tasks
+* Sprint metadata (name, dates)
+* Button: `Suggest Sprint Plan`
+* Preview from AI → editable → confirm to start
+
+---
+
+### 🗃 6. Kanban Board
+
+* Columns: To Do, In Progress, In Review, Done (customizable)
+* Drag-and-drop tasks
+* Task cards w/ priority, story points, assignee
+* AI heatmap overlay for overloads, delays
+
+---
+
+### 🔍 7. Task Details Panel
+
+* Openable drawer or modal
+* Title, description, labels, comments, attachments
+* Fields: type, priority, story points, due date
+* AI-inferred blockers (highlighted if present)
+
+---
+
+### 🔁 8. Sprint Retrospective View
+
+* After sprint ends, show editable auto-generated markdown:
+
+  ```md
+  ## 🟢 What went well
+  - On-time delivery
+  ## 🔴 What didn’t
+  - Missed estimation on two tasks
+  ## 🛠 Action Items
+  - Add better spec reviews
+  ```
+* Stored per sprint
+
+---
+
+### 🔔 9. Notification Center
+
+* Supabase real-time feed
+* Alerts for mentions, sprint events, AI insights
+* Dropdown or dedicated page
+
+---
+
+## 4. State Management
+
+* React Query for async state
+* Zustand for local state (modals, filters, drag previews)
+* React Hook Form + Zod for validation
+
+---
+
+## 5. Libraries
+
+| Purpose        | Library                    |
+| -------------- | -------------------------- |
+| Styling        | TailwindCSS + shadcn/ui    |
+| DnD            | @hello-pangea/dnd          |
+| Charts         | Recharts (for heatmaps)    |
+| AI Integration | Gemini API (via API route) |
+| Real-time      | Supabase subscriptions     |
+| Form Handling  | React Hook Form + Zod      |
+
+---
+
+## 6. Milestones
+
+| Week | Deliverables                                      |
+| ---- | ------------------------------------------------- |
+| 1    | Landing page, Auth pages, Dashboard shell         |
+| 2    | Backlog, Kanban board, Task panel                 |
+| 3    | Sprint planner view, AI integration (Sprint Plan) |
+| 4    | Risk heatmap, Scope detection, Retrospectives     |
+| 5    | Notifications, real-time sync, responsive polish  |
+
+---
+
+## 7. Success Metrics
+
+* ✅ 80+ Lighthouse score across landing and app views
+* 🧠 75% of users click on "Suggest Sprint Plan"
+* 📉 Risk heatmap correctly highlights overloaded users
+* 📜 80% of completed sprints use the auto-retrospective feature
