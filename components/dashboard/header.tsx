@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,22 +9,22 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Bell, Search, Menu, LogOut, User, Settings } from "lucide-react"
-import { useAuth } from "@/hooks/use-auth"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Bell, Search, Menu, LogOut, User, Settings } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export function DashboardHeader() {
-  const { user, signOut } = useAuth()
-  const router = useRouter()
+  const { user, signOut } = useAuth();
+  const router = useRouter();
 
   const handleSignOut = async () => {
-    await signOut()
-    router.push("/")
-  }
+    await signOut();
+    router.push("/");
+  };
 
   // Get user initials from email or name
   const getUserInitials = () => {
@@ -33,20 +33,22 @@ export function DashboardHeader() {
         .split(" ")
         .map((name: string) => name[0])
         .join("")
-        .toUpperCase()
+        .toUpperCase();
     }
     if (user?.email) {
-      return user.email.substring(0, 2).toUpperCase()
+      return user.email.substring(0, 2).toUpperCase();
     }
-    return "U"
-  }
+    return "U";
+  };
 
   const getUserDisplayName = () => {
-    return user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User"
-  }
+    return (
+      user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User"
+    );
+  };
 
   return (
-    <header className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8">
+    <header className="bg-white border-b sticky top-0 z-50 border-gray-200 px-4 sm:px-6 lg:px-8">
       <div className="flex h-16 items-center justify-between">
         <div className="flex items-center">
           <Button variant="ghost" size="sm" className="lg:hidden">
@@ -54,10 +56,10 @@ export function DashboardHeader() {
           </Button>
 
           <div className="ml-4 flex items-center">
-            <div className="relative">
+            {/* <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input placeholder="Search tasks, sprints, teams..." className="pl-10 w-64" />
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -66,7 +68,9 @@ export function DashboardHeader() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="relative">
                 <Bell className="h-5 w-5" />
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs">3</Badge>
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs">
+                  3
+                </Badge>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
@@ -74,20 +78,28 @@ export function DashboardHeader() {
               <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">Sprint planning completed</p>
-                  <p className="text-xs text-gray-500">AI suggested 12 tasks for Sprint 15</p>
+                  <p className="text-sm font-medium">
+                    Sprint planning completed
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    AI suggested 12 tasks for Sprint 15
+                  </p>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium">Risk detected</p>
-                  <p className="text-xs text-gray-500">John Doe is overloaded with 8 tasks</p>
+                  <p className="text-xs text-gray-500">
+                    John Doe is overloaded with 8 tasks
+                  </p>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium">Scope creep warning</p>
-                  <p className="text-xs text-gray-500">Sprint 14 scope increased by 20%</p>
+                  <p className="text-xs text-gray-500">
+                    Sprint 14 scope increased by 20%
+                  </p>
                 </div>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -98,7 +110,10 @@ export function DashboardHeader() {
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
                   <AvatarImage
-                    src={user?.user_metadata?.avatar_url || "/placeholder.svg?height=32&width=32"}
+                    src={
+                      user?.user_metadata?.avatar_url ||
+                      "/placeholder.svg?height=32&width=32"
+                    }
                     alt={getUserDisplayName()}
                   />
                   <AvatarFallback>{getUserInitials()}</AvatarFallback>
@@ -108,8 +123,12 @@ export function DashboardHeader() {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{getUserDisplayName()}</p>
-                  <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                  <p className="text-sm font-medium leading-none">
+                    {getUserDisplayName()}
+                  </p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {user?.email}
+                  </p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -126,7 +145,10 @@ export function DashboardHeader() {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut} className="text-red-600 focus:text-red-600">
+              <DropdownMenuItem
+                onClick={handleSignOut}
+                className="text-red-600 focus:text-red-600"
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>
@@ -135,5 +157,5 @@ export function DashboardHeader() {
         </div>
       </div>
     </header>
-  )
+  );
 }

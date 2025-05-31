@@ -351,10 +351,6 @@ export default function KanbanPage() {
                   className="pl-7 w-48 h-8 text-xs"
                 />
               </div>
-              <Button variant="outline" size="sm">
-                <Filter className="mr-1 h-3 w-3" />
-                Filters
-              </Button>
             </div>
           </div>
         </div>
@@ -384,14 +380,6 @@ export default function KanbanPage() {
                         {getFilteredTasksByStatus(column.id).length}
                       </Badge>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-5 w-5 p-0"
-                      onClick={() => handleCreateTask(column.id)}
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
                   </div>
                 </div>
 
@@ -564,15 +552,17 @@ export default function KanbanPage() {
                       )}
                       {provided.placeholder}
 
-                      {/* Add Task Button */}
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start text-gray-500 hover:text-gray-700 hover:bg-white/50 border-2 border-dashed border-gray-200 hover:border-gray-300 transition-all duration-200 h-8 text-xs"
-                        onClick={() => handleCreateTask(column.id)}
-                      >
-                        <Plus className="mr-1 h-3 w-3" />
-                        Create issue
-                      </Button>
+                      {/* Add Task Button - only show for To Do column */}
+                      {column.id === "todo" && (
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start text-gray-500 hover:text-gray-700 hover:bg-white/50 border-2 border-dashed border-gray-200 hover:border-gray-300 transition-all duration-200 h-8 text-xs"
+                          onClick={() => handleCreateTask(column.id)}
+                        >
+                          <Plus className="mr-1 h-3 w-3" />
+                          Create issue
+                        </Button>
+                      )}
                     </div>
                   )}
                 </Droppable>
