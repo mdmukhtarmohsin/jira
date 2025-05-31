@@ -38,9 +38,9 @@ export function DashboardSidebar() {
   const [isTeamsOpen, setIsTeamsOpen] = useState(true);
 
   return (
-    <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 lg:block hidden">
-      <div className="flex h-16 items-center px-6 border-b border-gray-200">
-        <h1 className="text-xl font-bold text-gray-900">Jira Clone AI</h1>
+    <div className="fixed inset-y-0 left-0 z-50 w-64 bg-background border-r border-border lg:block hidden">
+      <div className="flex h-16 items-center px-6 border-b border-border">
+        <h1 className="text-xl font-bold text-foreground">Jira Clone AI</h1>
       </div>
 
       <nav className="mt-6 px-3">
@@ -49,7 +49,7 @@ export function DashboardSidebar() {
             <li key={item.name}>
               <Link
                 href={item.href}
-                className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900"
+                className="flex items-center px-3 py-2 text-sm font-medium text-foreground rounded-md hover:bg-accent hover:text-accent-foreground"
               >
                 <item.icon className="mr-3 h-5 w-5" />
                 {item.name}
@@ -62,7 +62,7 @@ export function DashboardSidebar() {
           <div className="flex items-center justify-between px-3 py-2">
             <button
               onClick={() => setIsTeamsOpen(!isTeamsOpen)}
-              className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
+              className="flex items-center text-sm font-medium text-foreground hover:text-accent-foreground"
             >
               <ChevronDown className={cn("mr-2 h-4 w-4 transition-transform", !isTeamsOpen && "-rotate-90")} />
               Teams
@@ -78,7 +78,7 @@ export function DashboardSidebar() {
                 <li key={team.id}>
                   <Link
                     href={`/dashboard/teams/${team.id}`}
-                    className="block px-6 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md"
+                    className="block px-6 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-md"
                   >
                     {team.name}
                   </Link>

@@ -16,6 +16,7 @@ import { Bell, Search, Menu, LogOut, User, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export function DashboardHeader() {
   const { user, signOut } = useAuth();
@@ -48,7 +49,7 @@ export function DashboardHeader() {
   };
 
   return (
-    <header className="bg-white border-b sticky top-0 z-50 border-gray-200 px-4 sm:px-6 lg:px-8">
+    <header className="bg-background border-b sticky top-0 z-50 border-border px-4 sm:px-6 lg:px-8">
       <div className="flex h-16 items-center justify-between">
         <div className="flex items-center">
           <Button variant="ghost" size="sm" className="lg:hidden">
@@ -81,7 +82,7 @@ export function DashboardHeader() {
                   <p className="text-sm font-medium">
                     Sprint planning completed
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     AI suggested 12 tasks for Sprint 15
                   </p>
                 </div>
@@ -89,7 +90,7 @@ export function DashboardHeader() {
               <DropdownMenuItem>
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium">Risk detected</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     John Doe is overloaded with 8 tasks
                   </p>
                 </div>
@@ -97,13 +98,15 @@ export function DashboardHeader() {
               <DropdownMenuItem>
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium">Scope creep warning</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     Sprint 14 scope increased by 20%
                   </p>
                 </div>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <ThemeToggle />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
