@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DragDropContext,
   Droppable,
@@ -35,6 +35,7 @@ import {
 import { CreateTaskModal } from "@/components/modals/create-task-modal";
 import { EnhancedTaskDetailsModal } from "@/components/modals/enhanced-task-details-modal";
 import { useKanbanData } from "@/hooks/use-kanban-data";
+import { useEpicsAndLabels } from "@/hooks/use-epics-and-labels";
 import { toast } from "@/hooks/use-toast";
 
 const columns = [
@@ -110,6 +111,8 @@ export default function KanbanPage() {
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [showTaskDetails, setShowTaskDetails] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedEpic, setSelectedEpic] = useState("all");
+  const [selectedLabel, setSelectedLabel] = useState("all");
 
   const {
     tasks,
@@ -126,8 +129,21 @@ export default function KanbanPage() {
     refetch,
   } = useKanbanData();
 
+  const {
+    epics,
+    labels,
+    loading: epicsLabelsLoading,
+    error: epicsLabelsError,
+  } = useEpicsAndLabels(selectedTeamId);
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createModalStatus, setCreateModalStatus] = useState("todo");
+
+  // Reset epic and label filters when team changes
+  useEffect(() => {
+    setSelectedEpic("all");
+    setSelectedLabel("all");
+  }, [selectedTeamId]);
 
   const handleDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId } = result;
@@ -174,11 +190,24 @@ export default function KanbanPage() {
     setShowTaskDetails(true);
   };
 
-  const filteredTasks = (tasks || []).filter(
-    (task) =>
+  const filteredTasks = (tasks || []).filter((task) => {
+    const matchesSearch =
       task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      task.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesEpic =
+      selectedEpic === "all" ||
+      (selectedEpic === "no-epic" && !task.epic) ||
+      (task.epic && task.epic.id === selectedEpic);
+    const matchesLabel =
+      selectedLabel === "all" ||
+      (task.labels &&
+        task.labels.some(
+          (label: { id: string; name: string; color: string }) =>
+            label.id === selectedLabel
+        ));
+
+    return matchesSearch && matchesEpic && matchesLabel;
+  });
 
   const getFilteredTasksByStatus = (status: string) => {
     return filteredTasks.filter((task) => task.status === status);
@@ -367,6 +396,41 @@ export default function KanbanPage() {
                   className="pl-7 w-48 h-8 text-xs"
                 />
               </div>
+
+              <Select value={selectedEpic} onValueChange={setSelectedEpic}>
+                <SelectTrigger className="w-32 h-8 text-xs">
+                  <SelectValue placeholder="Epic" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Epics</SelectItem>
+                  <SelectItem value="no-epic">No Epic</SelectItem>
+                  {epics.map((epic) => (
+                    <SelectItem key={epic.id} value={epic.id}>
+                      {epic.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedLabel} onValueChange={setSelectedLabel}>
+                <SelectTrigger className="w-32 h-8 text-xs">
+                  <SelectValue placeholder="Label" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Labels</SelectItem>
+                  {labels.map((label) => (
+                    <SelectItem key={label.id} value={label.id}>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: label.color }}
+                        />
+                        {label.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
@@ -460,11 +524,48 @@ export default function KanbanPage() {
                                     {task.title}
                                   </h4>
 
+                                  {/* Epic Information */}
+                                  {task.epic && (
+                                    <div className="text-xs text-muted-foreground mb-1">
+                                      Epic: {task.epic.title}
+                                    </div>
+                                  )}
+
                                   {/* Task Description */}
                                   {task.description && (
                                     <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
                                       {task.description}
                                     </p>
+                                  )}
+
+                                  {/* Labels */}
+                                  {task.labels && task.labels.length > 0 && (
+                                    <div className="flex flex-wrap gap-1 mb-2">
+                                      {task.labels
+                                        .slice(0, 2)
+                                        .map(
+                                          (label: {
+                                            id: string;
+                                            name: string;
+                                            color: string;
+                                          }) => (
+                                            <span
+                                              key={label.id}
+                                              className="text-xs px-1.5 py-0.5 rounded-full text-white"
+                                              style={{
+                                                backgroundColor: label.color,
+                                              }}
+                                            >
+                                              {label.name}
+                                            </span>
+                                          )
+                                        )}
+                                      {task.labels.length > 2 && (
+                                        <span className="text-xs text-muted-foreground px-1.5 py-0.5 bg-muted rounded-full">
+                                          +{task.labels.length - 2}
+                                        </span>
+                                      )}
+                                    </div>
                                   )}
 
                                   {/* Task Metadata */}
