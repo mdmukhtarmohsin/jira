@@ -28,6 +28,10 @@ import {
   CheckCircle,
   Calendar,
   TrendingDown,
+  Loader2,
+  Search,
+  Database,
+  LineChart,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/auth";
@@ -118,6 +122,220 @@ interface PredictiveAnalytics {
   recommendedActions: string[];
 }
 
+// Add loading states interface
+interface LoadingState {
+  step: string;
+  message: string;
+  icon: React.ComponentType<any>;
+}
+
+const loadingSteps: LoadingState[] = [
+  {
+    step: "initialization",
+    message: "Initializing AI analysis engine...",
+    icon: Brain,
+  },
+  {
+    step: "data-fetch",
+    message: "Fetching project data and sprint information...",
+    icon: Database,
+  },
+  {
+    step: "scope-analysis",
+    message: "Analyzing scope creep patterns...",
+    icon: TrendingUp,
+  },
+  {
+    step: "risk-assessment",
+    message: "Evaluating team workload and risk factors...",
+    icon: AlertTriangle,
+  },
+  {
+    step: "performance-calc",
+    message: "Calculating performance metrics and velocity...",
+    icon: BarChart3,
+  },
+  {
+    step: "predictions",
+    message: "Running predictive models for sprint completion...",
+    icon: PieChart,
+  },
+  {
+    step: "retrospectives",
+    message: "Processing retrospective data...",
+    icon: FileText,
+  },
+  {
+    step: "insights-generation",
+    message: "Generating AI insights and recommendations...",
+    icon: Zap,
+  },
+  {
+    step: "finalization",
+    message: "Finalizing analysis and preparing dashboard...",
+    icon: CheckCircle,
+  },
+];
+
+// Loading Component
+function AIAnalysisLoading() {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [animationClass, setAnimationClass] = useState("opacity-100");
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAnimationClass("opacity-50");
+
+      setTimeout(() => {
+        setCurrentStep((prev) => (prev + 1) % loadingSteps.length);
+        setAnimationClass("opacity-100");
+      }, 200);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const CurrentIcon = loadingSteps[currentStep].icon;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight flex items-center">
+            <Brain className="mr-3 h-8 w-8 text-purple-600" />
+            AI Insights
+          </h1>
+          <p className="text-muted-foreground">
+            Comprehensive AI-powered analysis of your project health and team
+            performance
+          </p>
+        </div>
+      </div>
+
+      {/* Loading Analysis Card */}
+      <Card className="border-purple-200 bg-gradient-to-r from-purple-50 to-blue-50">
+        <CardContent className="pt-6">
+          <div className="flex flex-col items-center space-y-6">
+            {/* Animated Icon and Spinner */}
+            <div className="relative">
+              <div className="absolute inset-0 animate-ping">
+                <div className="w-16 h-16 border-4 border-purple-200 rounded-full"></div>
+              </div>
+              <div className="relative w-16 h-16 border-4 border-purple-600 rounded-full border-t-transparent animate-spin"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <CurrentIcon
+                  className={`h-6 w-6 text-purple-600 transition-opacity duration-200 ${animationClass}`}
+                />
+              </div>
+            </div>
+
+            {/* Analysis Status */}
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Running AI Analysis
+              </h3>
+              <p
+                className={`text-sm text-gray-600 transition-opacity duration-200 ${animationClass}`}
+              >
+                {loadingSteps[currentStep].message}
+              </p>
+            </div>
+
+            {/* Progress Indicator */}
+            <div className="w-full max-w-md space-y-2">
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>Progress</span>
+                <span>
+                  {Math.round(((currentStep + 1) / loadingSteps.length) * 100)}%
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
+                  style={{
+                    width: `${
+                      ((currentStep + 1) / loadingSteps.length) * 100
+                    }%`,
+                  }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Analysis Steps Grid */}
+            <div className="grid grid-cols-3 gap-4 mt-6 w-full max-w-2xl">
+              {loadingSteps.map((step, index) => {
+                const StepIcon = step.icon;
+                const isActive = index === currentStep;
+                const isCompleted = index < currentStep;
+
+                return (
+                  <div
+                    key={step.step}
+                    className={`flex flex-col items-center p-3 rounded-lg border transition-all duration-300 ${
+                      isActive
+                        ? "border-purple-500 bg-purple-50 scale-105"
+                        : isCompleted
+                        ? "border-green-500 bg-green-50"
+                        : "border-gray-200 bg-gray-50"
+                    }`}
+                  >
+                    <div
+                      className={`p-2 rounded-full ${
+                        isActive
+                          ? "bg-purple-100"
+                          : isCompleted
+                          ? "bg-green-100"
+                          : "bg-gray-100"
+                      }`}
+                    >
+                      {isCompleted ? (
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <StepIcon
+                          className={`h-4 w-4 ${
+                            isActive ? "text-purple-600" : "text-gray-400"
+                          }`}
+                        />
+                      )}
+                    </div>
+                    <span
+                      className={`text-xs text-center mt-1 font-medium ${
+                        isActive
+                          ? "text-purple-700"
+                          : isCompleted
+                          ? "text-green-700"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {step.step.replace("-", " ")}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Fun AI Facts */}
+            <div className="mt-6 p-4 bg-white rounded-lg border border-purple-100 max-w-md">
+              <div className="text-center">
+                <Search className="h-5 w-5 text-purple-600 mx-auto mb-2" />
+                <p className="text-xs text-gray-600">
+                  <span className="font-medium">Did you know?</span> Our AI
+                  analyzes over{" "}
+                  <span className="text-purple-600 font-medium">
+                    50+ data points
+                  </span>{" "}
+                  to generate insights about your team's performance and sprint
+                  health.
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default function AIInsightsPage() {
   const { user } = useAuth();
   const [scopeCreepAlerts, setScopeCreepAlerts] = useState<ScopeCreepAlert[]>(
@@ -162,9 +380,7 @@ export default function AIInsightsPage() {
     }
   };
 
-  // Copy the fetch functions from the original AI insights panel
   const fetchScopeCreepAlerts = async () => {
-    // Implementation from original component
     try {
       const { data: orgMember } = await supabase
         .from("organization_members")
@@ -256,7 +472,6 @@ export default function AIInsightsPage() {
   };
 
   const fetchRiskHeatmap = async () => {
-    // Implementation from original component
     try {
       const { data: orgMember } = await supabase
         .from("organization_members")
@@ -325,7 +540,6 @@ export default function AIInsightsPage() {
   };
 
   const fetchRetrospectives = async () => {
-    // Implementation from original component
     try {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -387,14 +601,12 @@ export default function AIInsightsPage() {
   };
 
   const fetchInsights = async () => {
-    // Simplified version of the original insights function
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Mock insights for now - in real implementation, this would call AI API
       const mockInsights: AIInsight[] = [
         {
           type: "success",
@@ -427,7 +639,6 @@ export default function AIInsightsPage() {
 
   const fetchPerformanceMetrics = async () => {
     try {
-      // Get user's teams first
       const { data: orgMember } = await supabase
         .from("organization_members")
         .select("organization_id")
@@ -458,7 +669,6 @@ export default function AIInsightsPage() {
         const metrics = await response.json();
         setPerformanceMetrics(metrics);
       } else {
-        // Fallback to mock data if API fails
         const mockMetrics: PerformanceMetrics = {
           sprintVelocity: [
             {
@@ -521,7 +731,6 @@ export default function AIInsightsPage() {
 
   const fetchPredictiveAnalytics = async () => {
     try {
-      // Get user's teams and active sprint
       const { data: orgMember } = await supabase
         .from("organization_members")
         .select("organization_id")
@@ -539,7 +748,6 @@ export default function AIInsightsPage() {
 
       const teamIds = teams.map((t) => t.id);
 
-      // Get active sprint
       const { data: activeSprint } = await supabase
         .from("sprints")
         .select("id")
@@ -562,7 +770,6 @@ export default function AIInsightsPage() {
           const analytics = await response.json();
           setPredictiveAnalytics(analytics);
         } else {
-          // Fallback to mock data
           const mockPredictive: PredictiveAnalytics = {
             sprintCompletion: {
               probability: 87,
@@ -590,7 +797,6 @@ export default function AIInsightsPage() {
           setPredictiveAnalytics(mockPredictive);
         }
       } else {
-        // No active sprint, use mock data
         const mockPredictive: PredictiveAnalytics = {
           sprintCompletion: {
             probability: 0,
@@ -678,22 +884,7 @@ export default function AIInsightsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">AI Insights</h1>
-            <p className="text-muted-foreground">
-              Comprehensive AI-powered analysis of your project health and team
-              performance
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center justify-center py-16">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-        </div>
-      </div>
-    );
+    return <AIAnalysisLoading />;
   }
 
   return (
@@ -878,7 +1069,6 @@ export default function AIInsightsPage() {
           </Card>
         </TabsContent>
 
-        {/* Include all the other tab contents from the original component */}
         <TabsContent value="scope-creep" className="space-y-4">
           {/* Scope creep content - same as original */}
           {scopeCreepAlerts.length > 0 ? (
