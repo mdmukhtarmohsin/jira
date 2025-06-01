@@ -632,9 +632,14 @@ export default function AIInsightsPage() {
 
       setCompletedSprints(sprintsWithRetros);
 
-      // Set the latest sprint as default if no sprint is selected
-      if (!selectedSprintId && sprintsWithRetros.length > 0) {
-        setSelectedSprintId(sprintsWithRetros[0].id);
+      // Set the latest sprint as default if no sprint is selected or if current selection is not in the new list
+      if (
+        !selectedSprintId ||
+        !sprintsWithRetros.find((s) => s.id === selectedSprintId)
+      ) {
+        if (sprintsWithRetros.length > 0) {
+          setSelectedSprintId(sprintsWithRetros[0].id);
+        }
       }
 
       // Keep the existing retrospectives array for backward compatibility
@@ -1616,15 +1621,21 @@ export default function AIInsightsPage() {
                       onValueChange={setSelectedSprintId}
                     >
                       <SelectTrigger className="w-[200px]">
-                        <SelectValue placeholder="Select a sprint" />
+                        <SelectValue placeholder="Select a sprint">
+                          {completedSprints.find(
+                            (s) => s.id === selectedSprintId
+                          )?.name || "Select a sprint"}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {completedSprints.map((sprint) => (
                           <SelectItem key={sprint.id} value={sprint.id}>
-                            <div className="flex items-center justify-between w-full">
-                              <span>{sprint.name}</span>
+                            <div className="flex items-center justify-between w-full min-w-0">
+                              <span className="truncate flex-1">
+                                {sprint.name}
+                              </span>
                               {sprint.retrospective && (
-                                <CheckCircle className="h-4 w-4 text-green-500 ml-2" />
+                                <CheckCircle className="h-4 w-4 text-green-500 ml-2 flex-shrink-0" />
                               )}
                             </div>
                           </SelectItem>
@@ -1638,13 +1649,28 @@ export default function AIInsightsPage() {
           </Card>
 
           {/* Selected Sprint Retrospective Content */}
-          {completedSprints.length > 0 ? (
+          {completedSprints.length > 0 && selectedSprintId ? (
             (() => {
               const selectedSprint = completedSprints.find(
                 (sprint) => sprint.id === selectedSprintId
               );
 
-              if (!selectedSprint) return null;
+              if (!selectedSprint) {
+                return (
+                  <Card>
+                    <CardContent className="text-center py-8">
+                      <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-medium mb-2 text-foreground">
+                        Sprint Not Found
+                      </h3>
+                      <p className="text-muted-foreground">
+                        The selected sprint could not be found. Please select
+                        another sprint.
+                      </p>
+                    </CardContent>
+                  </Card>
+                );
+              }
 
               return (
                 <Card className="border-l-4 border-l-blue-500">
