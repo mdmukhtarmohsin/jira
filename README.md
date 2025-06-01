@@ -1,10 +1,13 @@
 # Jira Clone with AI Sprint Negotiator & Auto Risk Analyzer
 
+🚀 **[Live Demo - Try it now!](https://jira-sepia.vercel.app/)**
+
 A modern project management tool inspired by Jira, enhanced with AI capabilities for intelligent sprint planning, risk detection, and automated retrospectives.
 
 ## 🚀 Features
 
 ### Core Project Management
+
 - **Kanban Boards**: Drag-and-drop task management with customizable columns
 - **Sprint Planning**: Create and manage sprints with team capacity planning
 - **Backlog Management**: Organize tasks by epics, priorities, and labels
@@ -12,6 +15,7 @@ A modern project management tool inspired by Jira, enhanced with AI capabilities
 - **Real-time Updates**: Live collaboration with Supabase real-time subscriptions
 
 ### AI-Powered Enhancements
+
 - **🤖 Sprint Negotiator**: AI suggests optimal sprint plans based on team capacity and task priorities
 - **⚠️ Risk Heatmap**: Automatically identifies overloaded team members and potential blockers
 - **📊 Scope Creep Detector**: Warns when sprint scope increases beyond healthy limits
@@ -29,24 +33,25 @@ A modern project management tool inspired by Jira, enhanced with AI capabilities
 ## 🏗 Project Structure
 
 \`\`\`
-├── app/                    # Next.js App Router pages
-│   ├── api/               # API routes
-│   ├── auth/              # Authentication pages
-│   ├── dashboard/         # Main application pages
-│   └── page.tsx           # Landing page
-├── components/            # Reusable UI components
-│   ├── dashboard/         # Dashboard-specific components
-│   ├── landing/           # Landing page components
-│   └── ui/                # shadcn/ui components
-├── lib/                   # Utility functions and configurations
-├── supabase/              # Database schema and migrations
-└── types/                 # TypeScript type definitions
+├── app/ # Next.js App Router pages
+│ ├── api/ # API routes
+│ ├── auth/ # Authentication pages
+│ ├── dashboard/ # Main application pages
+│ └── page.tsx # Landing page
+├── components/ # Reusable UI components
+│ ├── dashboard/ # Dashboard-specific components
+│ ├── landing/ # Landing page components
+│ └── ui/ # shadcn/ui components
+├── lib/ # Utility functions and configurations
+├── supabase/ # Database schema and migrations
+└── types/ # TypeScript type definitions
 \`\`\`
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+ and npm
+
+- Node.js 18+ and pnpm
 - Supabase account
 - Google AI Studio account (for Gemini API)
 
@@ -60,7 +65,7 @@ A modern project management tool inspired by Jira, enhanced with AI capabilities
 
 2. **Install dependencies**
    \`\`\`bash
-   npm install
+   pnpm install
    \`\`\`
 
 3. **Set up environment variables**
@@ -70,13 +75,14 @@ A modern project management tool inspired by Jira, enhanced with AI capabilities
    Fill in your Supabase and Gemini API credentials.
 
 4. **Set up Supabase database**
+
    - Create a new Supabase project
    - Run the SQL schema from `supabase/schema.sql`
    - Configure Row Level Security policies
 
 5. **Run the development server**
    \`\`\`bash
-   npm run dev
+   pnpm run dev
    \`\`\`
 
 6. **Open your browser**
@@ -96,25 +102,33 @@ The application uses a PostgreSQL database with the following main entities:
 ## 🤖 AI Features
 
 ### Sprint Negotiator
+
 Analyzes backlog tasks and team capacity to suggest optimal sprint plans:
+
 - Considers task priorities and story point estimates
 - Balances workload across team members
 - Provides reasoning for recommendations
 
 ### Risk Heatmap
+
 Identifies potential issues in real-time:
+
 - Overloaded team members (>5 tasks or >20 story points)
 - Delayed tasks past due dates
 - Blocked tasks (inferred from comments)
 
 ### Scope Creep Detection
+
 Monitors sprint changes and warns when:
+
 - Total story points increase by >15%
 - New tasks are added mid-sprint
 - Scope changes impact delivery timeline
 
 ### Auto Retrospectives
+
 Generates structured retrospective reports including:
+
 - What went well (completed tasks, on-time delivery)
 - What didn't go well (delays, blockers, scope changes)
 - Action items for improvement
@@ -136,15 +150,16 @@ Generates structured retrospective reports including:
 ## 🚀 Deployment
 
 ### Vercel Deployment
+
 1. Connect your GitHub repository to Vercel
 2. Add environment variables in Vercel dashboard
 3. Deploy automatically on push to main branch
 
 ### Environment Variables for Production
+
 \`\`\`env
 NEXT_PUBLIC_SUPABASE_URL=your_production_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_production_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_production_service_role_key
 GEMINI_API_KEY=your_gemini_api_key
 \`\`\`
 
