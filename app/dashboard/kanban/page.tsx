@@ -44,7 +44,7 @@ const columns = [
     title: "To Do",
     color: "bg-muted border-border",
     textColor: "text-muted-foreground",
-    headerColor: "bg-muted/50",
+    headerColor: "bg-background/20",
   },
   {
     id: "in_progress",

@@ -152,7 +152,7 @@ export function EnhancedTaskDetailsModal({
   };
 
   const statusColors = {
-    todo: "text-gray-600 dark:text-gray-400 bg-gray-50 border-gray-200",
+    todo: "text-neutral-600 dark:text-neutral-400 bg-neutral-50 border-neutral-200",
     in_progress: "text-blue-600 bg-blue-50 border-blue-200",
     review: "text-purple-600 bg-purple-50 border-purple-200",
     done: "text-green-600 bg-green-50 border-green-200",
@@ -534,18 +534,18 @@ export function EnhancedTaskDetailsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0 ">
+      <DialogContent className="max-w-4xl max-h-[90vh] p-0 dark:bg-neutral-900">
         <div className="flex h-full max-h-[85vh]">
           {/* Main Content */}
           <div className="flex-1 p-4 overflow-y-auto">
             <DialogHeader className="space-y-3">
               <div className="flex items-start justify-between">
                 <div className="flex items-start space-x-2">
-                  <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-100 text-lg">
+                  <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 text-lg">
                     {typeIcons[task.type]}
                   </div>
                   <div className="flex-1">
-                    <DialogTitle className="text-lg font-bold  mb-1">
+                    <DialogTitle className="text-lg font-bold dark:text-white mb-1">
                       {editingField === "title" ? (
                         <div className="space-y-2">
                           <Input
@@ -556,7 +556,7 @@ export function EnhancedTaskDetailsModal({
                                 title: e.target.value,
                               }))
                             }
-                            className="text-lg font-bold border-0 px-0 focus:ring-0 bg-transparent h-7"
+                            className="text-lg font-bold border-0 px-0 focus:ring-0 bg-transparent dark:bg-transparent dark:text-white h-7"
                           />
                           <div className="flex gap-2">
                             <Button
@@ -572,7 +572,7 @@ export function EnhancedTaskDetailsModal({
                               variant="outline"
                               size="sm"
                               onClick={() => setEditingField(null)}
-                              className="h-6 text-xs"
+                              className="h-6 text-xs dark:border-neutral-600 dark:text-neutral-300 dark:hover:bg-neutral-700"
                             >
                               Cancel
                             </Button>
@@ -580,14 +580,14 @@ export function EnhancedTaskDetailsModal({
                         </div>
                       ) : (
                         <div
-                          className="cursor-pointer hover:bg-gray-50 rounded p-1 -m-1"
+                          className="cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded p-1 -m-1"
                           onClick={() => setEditingField("title")}
                         >
                           {task.title}
                         </div>
                       )}
                     </DialogTitle>
-                    <div className="flex items-center space-x-2 text-xs text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center space-x-2 text-xs text-neutral-600 dark:text-neutral-400">
                       <span className="flex items-center space-x-1">
                         <span className="w-1 h-1 rounded-full bg-blue-500"></span>
                         <span className="capitalize font-medium">
@@ -595,7 +595,7 @@ export function EnhancedTaskDetailsModal({
                         </span>
                       </span>
                       <span>•</span>
-                      <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">
+                      <span className="font-mono text-xs bg-neutral-100 dark:bg-neutral-700 dark:text-neutral-300 px-1.5 py-0.5 rounded">
                         {task.id.slice(0, 8)}
                       </span>
                     </div>
@@ -608,7 +608,7 @@ export function EnhancedTaskDetailsModal({
                       variant="ghost"
                       size="sm"
                       onClick={() => setEditingField(null)}
-                      className="h-7 w-7 rounded-lg hover:bg-gray-100"
+                      className="h-7 w-7 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700"
                     >
                       <X className="w-3 h-3" />
                     </Button>
@@ -618,7 +618,7 @@ export function EnhancedTaskDetailsModal({
                       variant="ghost"
                       size="sm"
                       onClick={() => setEditingField("title")}
-                      className="h-7 w-7 rounded-lg hover:bg-gray-100"
+                      className="h-7 w-7 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700"
                     >
                       <Edit3 className="w-3 h-3" />
                     </Button>
@@ -628,21 +628,24 @@ export function EnhancedTaskDetailsModal({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 w-7 rounded-lg hover:bg-gray-100"
+                        className="h-7 w-7 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700"
                       >
                         <MoreHorizontal className="w-3 h-3" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-36">
-                      <DropdownMenuItem>
+                    <DropdownMenuContent
+                      align="end"
+                      className="w-36 dark:bg-neutral-800 dark:border-neutral-700"
+                    >
+                      <DropdownMenuItem className="dark:text-neutral-300 dark:hover:bg-neutral-700">
                         <Link className="w-3 h-3 mr-2" />
                         Copy link
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem className="dark:text-neutral-300 dark:hover:bg-neutral-700">
                         <Bookmark className="w-3 h-3 mr-2" />
                         Watch
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-600">
+                      <DropdownMenuItem className="text-red-600 dark:text-red-400 dark:hover:bg-neutral-700">
                         <Trash2 className="w-3 h-3 mr-2" />
                         Delete
                       </DropdownMenuItem>
@@ -655,7 +658,7 @@ export function EnhancedTaskDetailsModal({
             <div className="mt-4 space-y-4">
               {/* Description */}
               <div className="space-y-2">
-                <Label className="text-xs font-semibold  flex items-center space-x-1.5">
+                <Label className="text-xs font-semibold dark:text-neutral-200 flex items-center space-x-1.5">
                   <div className="w-0.5 h-3 bg-blue-500 rounded-full"></div>
                   <span>Description</span>
                   {editingField !== "description" && (
@@ -681,7 +684,7 @@ export function EnhancedTaskDetailsModal({
                           }))
                         }
                         placeholder="Add a description..."
-                        className="min-h-[60px] border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 text-xs"
+                        className="min-h-[60px] border-neutral-200 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white focus:border-blue-500 focus:ring-blue-500/20 text-xs"
                       />
                       <div className="flex gap-2">
                         <Button
@@ -697,7 +700,7 @@ export function EnhancedTaskDetailsModal({
                           variant="outline"
                           size="sm"
                           onClick={() => setEditingField(null)}
-                          className="h-6 text-xs"
+                          className="h-6 text-xs dark:border-neutral-600 dark:text-neutral-300 dark:hover:bg-neutral-700"
                         >
                           Cancel
                         </Button>
@@ -705,11 +708,11 @@ export function EnhancedTaskDetailsModal({
                     </div>
                   ) : (
                     <div
-                      className="text-xs text-gray-700 bg-gray-50/50 rounded-lg p-2 min-h-[60px] border border-gray-100 cursor-pointer hover:bg-gray-100/50"
+                      className="text-xs text-neutral-700 dark:text-neutral-300 bg-neutral-50/50 dark:bg-neutral-800/50 rounded-lg p-2 min-h-[60px] border border-neutral-100 dark:border-neutral-700 cursor-pointer hover:bg-neutral-100/50 dark:hover:bg-neutral-700/50"
                       onClick={() => setEditingField("description")}
                     >
                       {task.description || (
-                        <span className="text-gray-400 italic">
+                        <span className="text-neutral-400 dark:text-neutral-500 italic">
                           Click to add description
                         </span>
                       )}
@@ -720,22 +723,22 @@ export function EnhancedTaskDetailsModal({
 
               {/* Comments Section */}
               <div className="space-y-2">
-                <Label className="text-xs font-semibold  flex items-center space-x-1.5">
+                <Label className="text-xs font-semibold dark:text-neutral-200 flex items-center space-x-1.5">
                   <div className="w-0.5 h-3 bg-emerald-500 rounded-full"></div>
                   <MessageSquare className="w-3 h-3 text-emerald-600" />
                   <span>Comments</span>
                   <Badge
                     variant="secondary"
-                    className="ml-1 bg-emerald-50 text-emerald-700 border-emerald-200 text-xs px-1.5 py-0.5"
+                    className="ml-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 text-xs px-1.5 py-0.5"
                   >
                     {comments.length}
                   </Badge>
                 </Label>
 
                 {/* Add Comment */}
-                <div className="bg-white border border-gray-200 rounded-lg p-2">
+                <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-600 rounded-lg p-2">
                   <div className="flex space-x-2">
-                    <Avatar className="h-6 w-6 ring-1 ring-blue-100">
+                    <Avatar className="h-6 w-6 ring-1 ring-blue-100 dark:ring-blue-800">
                       <AvatarImage src={user?.user_metadata?.avatar_url} />
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-xs">
                         {user?.user_metadata?.full_name?.charAt(0) || "U"}
@@ -746,7 +749,7 @@ export function EnhancedTaskDetailsModal({
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
                         placeholder="Write a comment..."
-                        className="min-h-[40px] border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 resize-none text-xs"
+                        className="min-h-[40px] border-neutral-200 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white focus:border-blue-500 focus:ring-blue-500/20 resize-none text-xs"
                       />
                       <div className="flex justify-end">
                         <Button
@@ -770,28 +773,28 @@ export function EnhancedTaskDetailsModal({
                       {comments.map((comment, index) => (
                         <div key={comment.id} className="relative">
                           {index !== comments.length - 1 && (
-                            <div className="absolute left-3 top-8 bottom-0 w-px bg-gray-200"></div>
+                            <div className="absolute left-3 top-8 bottom-0 w-px bg-neutral-200 dark:bg-neutral-600"></div>
                           )}
                           <div className="flex space-x-2">
-                            <Avatar className="h-6 w-6 ring-1 ring-gray-100 relative z-10 bg-white">
+                            <Avatar className="h-6 w-6 ring-1 ring-neutral-100 dark:ring-neutral-700 relative z-10 bg-white dark:bg-neutral-800">
                               <AvatarImage
                                 src={comment.user.avatar_url || undefined}
                               />
-                              <AvatarFallback className="bg-gradient-to-br from-gray-500 to-gray-600 text-white font-semibold text-xs">
+                              <AvatarFallback className="bg-gradient-to-br from-neutral-500 to-neutral-600 text-white font-semibold text-xs">
                                 {comment.user.initials}
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0">
-                              <div className="bg-white border border-gray-200 rounded-lg p-2 shadow-sm hover:shadow-md transition-shadow duration-200">
+                              <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-600 rounded-lg p-2 shadow-sm hover:shadow-md dark:shadow-neutral-900/20 transition-shadow duration-200">
                                 <div className="flex items-center justify-between mb-1">
-                                  <span className="font-medium  text-xs">
+                                  <span className="font-medium dark:text-neutral-200 text-xs">
                                     {comment.user.full_name}
                                   </span>
-                                  <time className="text-xs text-gray-600 dark:text-gray-400">
+                                  <time className="text-xs text-neutral-600 dark:text-neutral-400">
                                     {formatDate(comment.created_at)}
                                   </time>
                                 </div>
-                                <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
+                                <p className="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap break-words">
                                   {comment.content}
                                 </p>
                               </div>
@@ -803,11 +806,11 @@ export function EnhancedTaskDetailsModal({
                   </ScrollArea>
                 ) : (
                   <div className="text-center py-6">
-                    <MessageSquare className="w-6 h-6 text-gray-300 mx-auto mb-1" />
-                    <p className="text-gray-600 dark:text-gray-400 font-medium text-xs">
+                    <MessageSquare className="w-6 h-6 text-neutral-300 dark:text-neutral-600 mx-auto mb-1" />
+                    <p className="text-neutral-600 dark:text-neutral-400 font-medium text-xs">
                       No comments yet
                     </p>
-                    <p className="text-gray-400 text-xs">
+                    <p className="text-neutral-400 dark:text-neutral-500 text-xs">
                       Be the first to share your thoughts!
                     </p>
                   </div>
@@ -815,12 +818,12 @@ export function EnhancedTaskDetailsModal({
               </div>
 
               {editingField === "title" && (
-                <div className="flex justify-end space-x-2 pt-3 border-t border-gray-200">
+                <div className="flex justify-end space-x-2 pt-3 border-t border-neutral-200 dark:border-neutral-600">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setEditingField(null)}
-                    className="h-7 text-xs"
+                    className="h-7 text-xs dark:border-neutral-600 dark:text-neutral-300 dark:hover:bg-neutral-700"
                   >
                     Cancel
                   </Button>
@@ -839,11 +842,11 @@ export function EnhancedTaskDetailsModal({
           </div>
 
           {/* Sidebar */}
-          <div className="w-60 bg-gradient-to-b from-gray-50 to-gray-100/50 border-l border-gray-200 p-3 overflow-y-auto">
+          <div className="w-60 bg-gradient-to-b from-neutral-50 to-neutral-100/50 dark:from-neutral-800 dark:to-neutral-900/50 border-l border-neutral-200 dark:border-neutral-600 p-3 overflow-y-auto">
             <div className="space-y-3">
               {/* Status */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold  uppercase tracking-wider">
+                <Label className="text-xs font-semibold dark:text-neutral-200 uppercase tracking-wider">
                   Status
                 </Label>
                 <div>
@@ -860,22 +863,40 @@ export function EnhancedTaskDetailsModal({
                           await handleFieldSave("status");
                         }}
                       >
-                        <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs">
+                        <SelectTrigger className="border-neutral-200 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="todo">To Do</SelectItem>
-                          <SelectItem value="in_progress">
+                        <SelectContent className="dark:bg-neutral-800 dark:border-neutral-600">
+                          <SelectItem
+                            value="todo"
+                            className="dark:text-neutral-300 dark:hover:bg-neutral-700"
+                          >
+                            To Do
+                          </SelectItem>
+                          <SelectItem
+                            value="in_progress"
+                            className="dark:text-neutral-300 dark:hover:bg-neutral-700"
+                          >
                             In Progress
                           </SelectItem>
-                          <SelectItem value="review">In Review</SelectItem>
-                          <SelectItem value="done">Done</SelectItem>
+                          <SelectItem
+                            value="review"
+                            className="dark:text-neutral-300 dark:hover:bg-neutral-700"
+                          >
+                            In Review
+                          </SelectItem>
+                          <SelectItem
+                            value="done"
+                            className="dark:text-neutral-300 dark:hover:bg-neutral-700"
+                          >
+                            Done
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   ) : (
                     <div
-                      className="cursor-pointer hover:bg-gray-50 rounded p-1 -m-1"
+                      className="cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded p-1 -m-1"
                       onClick={() => setEditingField("status")}
                     >
                       <Badge
@@ -892,7 +913,7 @@ export function EnhancedTaskDetailsModal({
 
               {/* Sprint */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold  uppercase tracking-wider">
+                <Label className="text-xs font-semibold dark:text-neutral-200 uppercase tracking-wider">
                   Sprint
                 </Label>
                 <div>
@@ -909,13 +930,22 @@ export function EnhancedTaskDetailsModal({
                           await handleFieldSave("sprint_id");
                         }}
                       >
-                        <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs">
+                        <SelectTrigger className="border-neutral-200 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="backlog">Backlog</SelectItem>
+                        <SelectContent className="dark:bg-neutral-800 dark:border-neutral-600">
+                          <SelectItem
+                            value="backlog"
+                            className="dark:text-neutral-300 dark:hover:bg-neutral-700"
+                          >
+                            Backlog
+                          </SelectItem>
                           {sprints.map((sprint) => (
-                            <SelectItem key={sprint.id} value={sprint.id}>
+                            <SelectItem
+                              key={sprint.id}
+                              value={sprint.id}
+                              className="dark:text-neutral-300 dark:hover:bg-neutral-700"
+                            >
                               {sprint.name}
                             </SelectItem>
                           ))}
@@ -924,14 +954,14 @@ export function EnhancedTaskDetailsModal({
                     </div>
                   ) : (
                     <div
-                      className="cursor-pointer hover:bg-gray-50 rounded p-1 -m-1"
+                      className="cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded p-1 -m-1"
                       onClick={() => setEditingField("sprint_id")}
                     >
                       <div className="flex items-center space-x-1.5">
-                        <div className="w-5 h-5 rounded-lg bg-purple-100 flex items-center justify-center">
-                          <GitBranch className="w-2.5 h-2.5 text-purple-600" />
+                        <div className="w-5 h-5 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+                          <GitBranch className="w-2.5 h-2.5 text-purple-600 dark:text-purple-400" />
                         </div>
-                        <span className="font-medium  text-xs">
+                        <span className="font-medium dark:text-neutral-200 text-xs">
                           {task.sprint?.name || "Backlog"}
                         </span>
                       </div>
@@ -942,7 +972,7 @@ export function EnhancedTaskDetailsModal({
 
               {/* Priority */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold  uppercase tracking-wider">
+                <Label className="text-xs font-semibold dark:text-neutral-200 uppercase tracking-wider">
                   Priority
                 </Label>
                 <div>
@@ -959,23 +989,32 @@ export function EnhancedTaskDetailsModal({
                           await handleFieldSave("priority");
                         }}
                       >
-                        <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs">
+                        <SelectTrigger className="border-neutral-200 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">
+                        <SelectContent className="dark:bg-neutral-800 dark:border-neutral-600">
+                          <SelectItem
+                            value="low"
+                            className="dark:text-neutral-300 dark:hover:bg-neutral-700"
+                          >
                             <div className="flex items-center">
                               <Flag className="w-3 h-3 mr-1.5 text-green-600" />
                               Low
                             </div>
                           </SelectItem>
-                          <SelectItem value="medium">
+                          <SelectItem
+                            value="medium"
+                            className="dark:text-neutral-300 dark:hover:bg-neutral-700"
+                          >
                             <div className="flex items-center">
                               <Flag className="w-3 h-3 mr-1.5 text-orange-600" />
                               Medium
                             </div>
                           </SelectItem>
-                          <SelectItem value="high">
+                          <SelectItem
+                            value="high"
+                            className="dark:text-neutral-300 dark:hover:bg-neutral-700"
+                          >
                             <div className="flex items-center">
                               <Flag className="w-3 h-3 mr-1.5 text-red-600" />
                               High
@@ -986,7 +1025,7 @@ export function EnhancedTaskDetailsModal({
                     </div>
                   ) : (
                     <div
-                      className="cursor-pointer hover:bg-gray-50 rounded p-1 -m-1"
+                      className="cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded p-1 -m-1"
                       onClick={() => setEditingField("priority")}
                     >
                       <Badge
@@ -1004,7 +1043,7 @@ export function EnhancedTaskDetailsModal({
 
               {/* Assignee */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold  uppercase tracking-wider">
+                <Label className="text-xs font-semibold dark:text-neutral-200 uppercase tracking-wider">
                   Assignee
                 </Label>
                 <div>
@@ -1021,13 +1060,22 @@ export function EnhancedTaskDetailsModal({
                           await handleFieldSave("assignee_id");
                         }}
                       >
-                        <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs">
+                        <SelectTrigger className="border-neutral-200 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs">
                           <SelectValue placeholder="Unassigned" />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="unassigned">Unassigned</SelectItem>
+                        <SelectContent className="dark:bg-neutral-800 dark:border-neutral-600">
+                          <SelectItem
+                            value="unassigned"
+                            className="dark:text-neutral-300 dark:hover:bg-neutral-700"
+                          >
+                            Unassigned
+                          </SelectItem>
                           {teamMembers.map((member) => (
-                            <SelectItem key={member.id} value={member.id}>
+                            <SelectItem
+                              key={member.id}
+                              value={member.id}
+                              className="dark:text-neutral-300 dark:hover:bg-neutral-700"
+                            >
                               <div className="flex items-center">
                                 <Avatar className="w-4 h-4 mr-1.5">
                                   <AvatarImage
@@ -1046,13 +1094,13 @@ export function EnhancedTaskDetailsModal({
                     </div>
                   ) : (
                     <div
-                      className="cursor-pointer hover:bg-gray-50 rounded p-1 -m-1"
+                      className="cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded p-1 -m-1"
                       onClick={() => setEditingField("assignee_id")}
                     >
                       <div className="flex items-center space-x-1.5">
                         {task.assignee ? (
                           <>
-                            <Avatar className="w-5 h-5 ring-1 ring-gray-200">
+                            <Avatar className="w-5 h-5 ring-1 ring-neutral-200 dark:ring-neutral-600">
                               <AvatarImage
                                 src={task.assignee.avatar || undefined}
                               />
@@ -1061,24 +1109,24 @@ export function EnhancedTaskDetailsModal({
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="font-medium  text-xs">
+                              <p className="font-medium dark:text-neutral-200 text-xs">
                                 {task.assignee.name}
                               </p>
-                              <p className="text-xs text-gray-600 dark:text-gray-400">
+                              <p className="text-xs text-neutral-600 dark:text-neutral-400">
                                 Assigned
                               </p>
                             </div>
                           </>
                         ) : (
                           <div className="flex items-center space-x-1.5">
-                            <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center">
-                              <User className="w-2.5 h-2.5 text-gray-400" />
+                            <div className="w-5 h-5 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center">
+                              <User className="w-2.5 h-2.5 text-neutral-400 dark:text-neutral-500" />
                             </div>
                             <div>
-                              <p className="font-medium text-gray-600 dark:text-gray-400 text-xs">
+                              <p className="font-medium text-neutral-600 dark:text-neutral-400 text-xs">
                                 Unassigned
                               </p>
-                              <p className="text-xs text-gray-400">
+                              <p className="text-xs text-neutral-400 dark:text-neutral-500">
                                 Click to assign
                               </p>
                             </div>
@@ -1092,7 +1140,7 @@ export function EnhancedTaskDetailsModal({
 
               {/* Story Points */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold  uppercase tracking-wider">
+                <Label className="text-xs font-semibold dark:text-neutral-200 uppercase tracking-wider">
                   Story Points
                 </Label>
                 <div>
@@ -1108,19 +1156,19 @@ export function EnhancedTaskDetailsModal({
                           }))
                         }
                         placeholder="0"
-                        className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs"
+                        className="border-neutral-200 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs"
                       />
                     </div>
                   ) : (
                     <div
-                      className="cursor-pointer hover:bg-gray-50 rounded p-1 -m-1"
+                      className="cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded p-1 -m-1"
                       onClick={() => setEditingField("story_points")}
                     >
                       <div className="flex items-center space-x-1.5">
-                        <div className="w-5 h-5 rounded-lg bg-blue-100 flex items-center justify-center">
-                          <Target className="w-2.5 h-2.5 text-blue-600" />
+                        <div className="w-5 h-5 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                          <Target className="w-2.5 h-2.5 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <span className="font-medium  text-xs">
+                        <span className="font-medium dark:text-neutral-200 text-xs">
                           {task.story_points || "Not estimated"}
                         </span>
                       </div>
@@ -1131,7 +1179,7 @@ export function EnhancedTaskDetailsModal({
 
               {/* Due Date */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold  uppercase tracking-wider">
+                <Label className="text-xs font-semibold dark:text-neutral-200 uppercase tracking-wider">
                   Due Date
                 </Label>
                 <div>
@@ -1146,26 +1194,26 @@ export function EnhancedTaskDetailsModal({
                             due_date: e.target.value,
                           }))
                         }
-                        className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs"
+                        className="border-neutral-200 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs"
                       />
                     </div>
                   ) : (
                     <div
-                      className="cursor-pointer hover:bg-gray-50 rounded p-1 -m-1"
+                      className="cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded p-1 -m-1"
                       onClick={() => setEditingField("due_date")}
                     >
                       <div className="flex items-center space-x-1.5">
-                        <div className="w-5 h-5 rounded-lg bg-orange-100 flex items-center justify-center">
-                          <Calendar className="w-2.5 h-2.5 text-orange-600" />
+                        <div className="w-5 h-5 rounded-lg bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
+                          <Calendar className="w-2.5 h-2.5 text-orange-600 dark:text-orange-400" />
                         </div>
                         <div>
-                          <p className="font-medium  text-xs">
+                          <p className="font-medium dark:text-neutral-200 text-xs">
                             {task.due_date
                               ? new Date(task.due_date).toLocaleDateString()
                               : "No due date"}
                           </p>
                           {task.due_date && (
-                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                            <p className="text-xs text-neutral-600 dark:text-neutral-400">
                               {new Date(task.due_date) < new Date()
                                 ? "Overdue"
                                 : "Upcoming"}
@@ -1178,17 +1226,17 @@ export function EnhancedTaskDetailsModal({
                 </div>
               </div>
 
-              <Separator className="bg-gray-300" />
+              <Separator className="bg-neutral-300 dark:bg-neutral-600" />
 
               {/* Metadata */}
               <div className="space-y-2">
                 <div className="space-y-0.5">
-                  <Label className="text-xs font-semibold  uppercase tracking-wider">
+                  <Label className="text-xs font-semibold dark:text-neutral-200 uppercase tracking-wider">
                     Created
                   </Label>
                   <div className="flex items-center space-x-1">
-                    <Clock className="w-2.5 h-2.5 text-gray-400" />
-                    <span className="text-xs text-gray-600 dark:text-gray-400">
+                    <Clock className="w-2.5 h-2.5 text-neutral-400 dark:text-neutral-500" />
+                    <span className="text-xs text-neutral-600 dark:text-neutral-400">
                       {formatDate(task.created_at)}
                     </span>
                   </div>
@@ -1196,12 +1244,12 @@ export function EnhancedTaskDetailsModal({
 
                 {task.updated_at && (
                   <div className="space-y-0.5">
-                    <Label className="text-xs font-semibold  uppercase tracking-wider">
+                    <Label className="text-xs font-semibold dark:text-neutral-200 uppercase tracking-wider">
                       Last Updated
                     </Label>
                     <div className="flex items-center space-x-1">
-                      <Activity className="w-2.5 h-2.5 text-gray-400" />
-                      <span className="text-xs text-gray-600 dark:text-gray-400">
+                      <Activity className="w-2.5 h-2.5 text-neutral-400 dark:text-neutral-500" />
+                      <span className="text-xs text-neutral-600 dark:text-neutral-400">
                         {formatDate(task.updated_at)}
                       </span>
                     </div>
