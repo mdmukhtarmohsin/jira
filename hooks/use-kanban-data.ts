@@ -28,6 +28,16 @@ interface Task {
     name: string;
     status: string;
   };
+  epic?: {
+    id: string;
+    title: string;
+    status: string;
+  };
+  labels?: Array<{
+    id: string;
+    name: string;
+    color: string;
+  }>;
 }
 
 interface Team {
@@ -135,7 +145,8 @@ export function useKanbanData() {
           story_points,
           assignee_id,
           due_date,
-          created_at
+          created_at,
+          epic_id
         `
           )
           .eq("team_id", teamId)
@@ -180,7 +191,8 @@ export function useKanbanData() {
           story_points,
           assignee_id,
           due_date,
-          created_at
+          created_at,
+          epic_id
         `
           )
           .eq("team_id", teamId)
@@ -205,7 +217,8 @@ export function useKanbanData() {
             story_points,
             assignee_id,
             due_date,
-            created_at
+            created_at,
+            epic_id
           )
         `
           )
@@ -223,6 +236,8 @@ export function useKanbanData() {
         tasksData.map(async (task: any) => {
           let assignee = undefined;
           let sprint = undefined;
+          let epic = undefined;
+          let labels: Array<{ id: string; name: string; color: string }> = [];
 
           // Get assignee information
           if (task.assignee_id) {
@@ -245,6 +260,41 @@ export function useKanbanData() {
                   : "U",
               };
             }
+          }
+
+          // Get epic information
+          if (task.epic_id) {
+            const { data: epicData } = await supabase
+              .from("epics")
+              .select("id, title, status")
+              .eq("id", task.epic_id)
+              .single();
+
+            if (epicData) {
+              epic = {
+                id: epicData.id,
+                title: epicData.title,
+                status: epicData.status,
+              };
+            }
+          }
+
+          // Get labels information
+          const { data: taskLabels } = await supabase
+            .from("task_labels")
+            .select(
+              `
+              labels!inner(id, name, color)
+            `
+            )
+            .eq("task_id", task.id);
+
+          if (taskLabels && taskLabels.length > 0) {
+            labels = taskLabels.map((tl: any) => ({
+              id: tl.labels.id,
+              name: tl.labels.name,
+              color: tl.labels.color,
+            }));
           }
 
           // Get sprint information
@@ -287,6 +337,8 @@ export function useKanbanData() {
             ...task,
             assignee,
             sprint,
+            epic,
+            labels,
             isBlocked,
             isOverdue,
             commentCount: commentCount || 0,

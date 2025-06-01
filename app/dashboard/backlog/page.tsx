@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { CreateTaskModal } from "@/components/modals/create-task-modal";
 import { useKanbanData } from "@/hooks/use-kanban-data";
+import { useEpicsAndLabels } from "@/hooks/use-epics-and-labels";
 import { TaskDetailsModal } from "@/components/modals/task-details-modal";
 import {
   DropdownMenu,
@@ -89,11 +90,20 @@ export default function BacklogPage() {
     sprints,
   } = useKanbanData();
 
+  const {
+    epics,
+    labels,
+    loading: epicsLabelsLoading,
+    error: epicsLabelsError,
+  } = useEpicsAndLabels(selectedTeamId);
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPriority, setSelectedPriority] = useState("all");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedEpic, setSelectedEpic] = useState("all");
+  const [selectedLabel, setSelectedLabel] = useState("all");
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [collapsedSprints, setCollapsedSprints] = useState<Set<string>>(
     new Set()
@@ -104,6 +114,13 @@ export default function BacklogPage() {
     if (selectedTeamId && selectedSprintId !== "backlog") {
       setSelectedSprintId("backlog");
     }
+    // Reset filters when team changes
+    setSelectedEpic("all");
+    setSelectedLabel("all");
+    setSelectedType("all");
+    setSelectedStatus("all");
+    setSelectedPriority("all");
+    setSearchTerm("");
   }, [selectedTeamId, selectedSprintId, setSelectedSprintId]);
 
   const handleTaskCreated = () => {
@@ -146,8 +163,26 @@ export default function BacklogPage() {
       const matchesType = selectedType === "all" || task.type === selectedType;
       const matchesStatus =
         selectedStatus === "all" || task.status === selectedStatus;
+      const matchesEpic =
+        selectedEpic === "all" ||
+        (selectedEpic === "no-epic" && !task.epic) ||
+        (task.epic && task.epic.id === selectedEpic);
+      const matchesLabel =
+        selectedLabel === "all" ||
+        (task.labels &&
+          task.labels.some(
+            (label: { id: string; name: string; color: string }) =>
+              label.id === selectedLabel
+          ));
 
-      return matchesSearch && matchesPriority && matchesType && matchesStatus;
+      return (
+        matchesSearch &&
+        matchesPriority &&
+        matchesType &&
+        matchesStatus &&
+        matchesEpic &&
+        matchesLabel
+      );
     });
 
     if (selectedSprintId === "backlog") {
@@ -321,12 +356,18 @@ export default function BacklogPage() {
           </SelectContent>
         </Select>
 
-        <Select value="all">
+        <Select value={selectedEpic} onValueChange={setSelectedEpic}>
           <SelectTrigger className="w-32">
             <SelectValue placeholder="Epic" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Epic</SelectItem>
+            <SelectItem value="all">All Epics</SelectItem>
+            <SelectItem value="no-epic">No Epic</SelectItem>
+            {epics.map((epic) => (
+              <SelectItem key={epic.id} value={epic.id}>
+                {epic.title}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
@@ -342,12 +383,23 @@ export default function BacklogPage() {
           </SelectContent>
         </Select>
 
-        <Select value="all">
+        <Select value={selectedLabel} onValueChange={setSelectedLabel}>
           <SelectTrigger className="w-32">
             <SelectValue placeholder="Label" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Label</SelectItem>
+            <SelectItem value="all">All Labels</SelectItem>
+            {labels.map((label) => (
+              <SelectItem key={label.id} value={label.id}>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: label.color }}
+                  />
+                  {label.name}
+                </div>
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -449,10 +501,41 @@ export default function BacklogPage() {
                           <span className="text-sm font-medium text-foreground truncate">
                             {task.title}
                           </span>
+                          {task.epic && (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Epic: {task.epic.title}
+                            </div>
+                          )}
                         </div>
 
                         {/* Labels/Status */}
                         <div className="flex items-center gap-2">
+                          {task.labels && task.labels.length > 0 && (
+                            <div className="flex gap-1">
+                              {task.labels
+                                .slice(0, 3)
+                                .map(
+                                  (label: {
+                                    id: string;
+                                    name: string;
+                                    color: string;
+                                  }) => (
+                                    <span
+                                      key={label.id}
+                                      className="text-xs px-2 py-1 rounded-full text-white"
+                                      style={{ backgroundColor: label.color }}
+                                    >
+                                      {label.name}
+                                    </span>
+                                  )
+                                )}
+                              {task.labels.length > 3 && (
+                                <span className="text-xs text-muted-foreground">
+                                  +{task.labels.length - 3}
+                                </span>
+                              )}
+                            </div>
+                          )}
                           <Badge
                             variant="outline"
                             className={cn(
