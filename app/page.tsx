@@ -6,7 +6,7 @@ import { CTAFooter } from "@/components/landing/cta-footer";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       <Hero />
       <Features />
       <DemoCarousel />
