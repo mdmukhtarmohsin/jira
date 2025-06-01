@@ -13,6 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   AlertTriangle,
   TrendingUp,
   Users,
@@ -32,6 +39,7 @@ import {
   Search,
   Database,
   LineChart,
+  Plus,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/auth";
@@ -78,6 +86,14 @@ interface RetrospectiveData {
   sprintName: string;
   content: string;
   generatedAt: string;
+}
+
+// Add new interface for completed sprints
+interface CompletedSprint {
+  id: string;
+  name: string;
+  endDate: string;
+  retrospective?: RetrospectiveData;
 }
 
 interface AIInsight {
@@ -345,6 +361,11 @@ export default function AIInsightsPage() {
   );
   const [riskHeatmap, setRiskHeatmap] = useState<RiskHeatmapData | null>(null);
   const [retrospectives, setRetrospectives] = useState<RetrospectiveData[]>([]);
+  const [completedSprints, setCompletedSprints] = useState<CompletedSprint[]>(
+    []
+  );
+  const [selectedSprintId, setSelectedSprintId] = useState<string>("");
+  const [generatingRetrospective, setGeneratingRetrospective] = useState(false);
   const [insights, setInsights] = useState<AIInsight[]>([]);
   const [performanceMetrics, setPerformanceMetrics] =
     useState<PerformanceMetrics | null>(null);
@@ -562,39 +583,64 @@ export default function AIInsightsPage() {
       if (!teams) return;
 
       const teamIds = teams.map((t) => t.id);
-      const { data: completedSprints } = await supabase
+      const { data: completedSprintsData } = await supabase
         .from("sprints")
         .select("id, name, end_date")
         .in("team_id", teamIds)
         .eq("status", "completed")
         .gte("end_date", thirtyDaysAgo.toISOString())
         .order("end_date", { ascending: false })
-        .limit(5);
+        .limit(10); // Increased limit to show more sprints
 
-      if (!completedSprints) return;
+      if (!completedSprintsData || completedSprintsData.length === 0) {
+        setCompletedSprints([]);
+        setSelectedSprintId("");
+        setRetrospectives([]);
+        return;
+      }
 
       const { data: existingRetros } = await supabase
         .from("retrospectives")
         .select("sprint_id, content, created_at")
         .in(
           "sprint_id",
-          completedSprints.map((s) => s.id)
+          completedSprintsData.map((s) => s.id)
         );
 
-      const retros: RetrospectiveData[] = [];
-      for (const sprint of completedSprints) {
-        const existingRetro = existingRetros?.find(
-          (r) => r.sprint_id === sprint.id
-        );
-        if (existingRetro) {
-          retros.push({
-            sprintId: sprint.id,
-            sprintName: sprint.name,
-            content: existingRetro.content,
-            generatedAt: existingRetro.created_at,
-          });
+      // Organize completed sprints with their retrospectives
+      const sprintsWithRetros: CompletedSprint[] = completedSprintsData.map(
+        (sprint) => {
+          const retrospective = existingRetros?.find(
+            (r) => r.sprint_id === sprint.id
+          );
+
+          return {
+            id: sprint.id,
+            name: sprint.name,
+            endDate: sprint.end_date,
+            retrospective: retrospective
+              ? {
+                  sprintId: sprint.id,
+                  sprintName: sprint.name,
+                  content: retrospective.content,
+                  generatedAt: retrospective.created_at,
+                }
+              : undefined,
+          };
         }
+      );
+
+      setCompletedSprints(sprintsWithRetros);
+
+      // Set the latest sprint as default if no sprint is selected
+      if (!selectedSprintId && sprintsWithRetros.length > 0) {
+        setSelectedSprintId(sprintsWithRetros[0].id);
       }
+
+      // Keep the existing retrospectives array for backward compatibility
+      const retros: RetrospectiveData[] = sprintsWithRetros
+        .filter((sprint) => sprint.retrospective)
+        .map((sprint) => sprint.retrospective!);
 
       setRetrospectives(retros);
     } catch (error) {
@@ -819,6 +865,7 @@ export default function AIInsightsPage() {
 
   const generateSprintRetrospective = async (sprintId: string) => {
     try {
+      setGeneratingRetrospective(true);
       const response = await fetch("/api/ai/retrospective", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -830,7 +877,10 @@ export default function AIInsightsPage() {
           title: "Retrospective Generated",
           description: "AI retrospective has been generated for the sprint.",
         });
-        fetchRetrospectives();
+        // Refresh retrospectives data
+        await fetchRetrospectives();
+      } else {
+        throw new Error("Failed to generate retrospective");
       }
     } catch (error) {
       console.error("Error generating retrospective:", error);
@@ -839,6 +889,8 @@ export default function AIInsightsPage() {
         description: "Failed to generate retrospective.",
         variant: "destructive",
       });
+    } finally {
+      setGeneratingRetrospective(false);
     }
   };
 
@@ -915,7 +967,7 @@ export default function AIInsightsPage() {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 bg-muted dark:bg-muted/50">
+        <TabsList className="grid w-full grid-cols-6 bg-muted dark:bg-background">
           <TabsTrigger
             value="overview"
             className="text-sm font-medium data-[state=active]:text-foreground"
@@ -1543,44 +1595,210 @@ export default function AIInsightsPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="retrospectives" className="space-y-4">
-          {/* Retrospectives content - same as original */}
-          {retrospectives.length > 0 ? (
-            retrospectives.map((retro) => (
-              <Card
-                key={retro.sprintId}
-                className="border-l-4 border-l-blue-500"
-              >
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">
-                      {retro.sprintName}
-                    </CardTitle>
-                    <Badge variant="outline">
-                      {new Date(retro.generatedAt).toLocaleDateString()}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="prose prose-sm max-w-none dark:prose-invert">
-                    <div className="whitespace-pre-wrap text-sm text-foreground">
-                      {retro.content}
+        <TabsContent value="retrospectives" className="space-y-6">
+          {/* Sprint Selector and Controls */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center">
+                    <FileText className="mr-2 h-5 w-5" />
+                    Sprint Retrospectives
+                  </CardTitle>
+                  <CardDescription>
+                    AI-generated insights from completed sprints
+                  </CardDescription>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {completedSprints.length > 0 && (
+                    <Select
+                      value={selectedSprintId}
+                      onValueChange={setSelectedSprintId}
+                    >
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder="Select a sprint" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {completedSprints.map((sprint) => (
+                          <SelectItem key={sprint.id} value={sprint.id}>
+                            <div className="flex items-center justify-between w-full">
+                              <span>{sprint.name}</span>
+                              {sprint.retrospective && (
+                                <CheckCircle className="h-4 w-4 text-green-500 ml-2" />
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+
+          {/* Selected Sprint Retrospective Content */}
+          {completedSprints.length > 0 ? (
+            (() => {
+              const selectedSprint = completedSprints.find(
+                (sprint) => sprint.id === selectedSprintId
+              );
+
+              if (!selectedSprint) return null;
+
+              return (
+                <Card className="border-l-4 border-l-blue-500">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-lg">
+                          {selectedSprint.name}
+                        </CardTitle>
+                        <CardDescription>
+                          Completed on{" "}
+                          {new Date(
+                            selectedSprint.endDate
+                          ).toLocaleDateString()}
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {selectedSprint.retrospective ? (
+                          <Badge
+                            variant="outline"
+                            className="bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300"
+                          >
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Generated on{" "}
+                            {new Date(
+                              selectedSprint.retrospective.generatedAt
+                            ).toLocaleDateString()}
+                          </Badge>
+                        ) : (
+                          <Button
+                            onClick={() =>
+                              generateSprintRetrospective(selectedSprint.id)
+                            }
+                            disabled={generatingRetrospective}
+                            size="sm"
+                          >
+                            {generatingRetrospective ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                              <Plus className="mr-2 h-4 w-4" />
+                            )}
+                            Generate Retrospective
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                  </CardHeader>
+                  <CardContent>
+                    {selectedSprint.retrospective ? (
+                      <div className="prose prose-sm max-w-none dark:prose-invert">
+                        <div className="whitespace-pre-wrap text-sm text-foreground">
+                          {selectedSprint.retrospective.content}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-medium mb-2 text-foreground">
+                          No Retrospective Generated
+                        </h3>
+                        <p className="text-muted-foreground mb-4">
+                          Generate an AI-powered retrospective for this
+                          completed sprint to get insights on what went well,
+                          what could be improved, and actionable
+                          recommendations.
+                        </p>
+                        <Button
+                          onClick={() =>
+                            generateSprintRetrospective(selectedSprint.id)
+                          }
+                          disabled={generatingRetrospective}
+                        >
+                          {generatingRetrospective ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Plus className="mr-2 h-4 w-4" />
+                          )}
+                          Generate Retrospective
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })()
           ) : (
             <div className="text-center py-8">
               <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium mb-2 text-foreground">
-                No Retrospectives Yet
+                No Completed Sprints Found
               </h3>
               <p className="text-muted-foreground mb-4">
-                Retrospectives will be automatically generated when sprints are
-                completed.
+                Retrospectives will be available once you have completed sprints
+                in your project.
               </p>
             </div>
+          )}
+
+          {/* All Sprints Overview */}
+          {completedSprints.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>All Completed Sprints</CardTitle>
+                <CardDescription>
+                  Overview of all your completed sprints and their retrospective
+                  status
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-3">
+                  {completedSprints.map((sprint) => (
+                    <div
+                      key={sprint.id}
+                      className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50 ${
+                        selectedSprintId === sprint.id
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-950/20"
+                          : "border-border"
+                      }`}
+                      onClick={() => setSelectedSprintId(sprint.id)}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div>
+                          <div className="font-medium text-foreground">
+                            {sprint.name}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Completed{" "}
+                            {new Date(sprint.endDate).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {sprint.retrospective ? (
+                          <Badge
+                            variant="outline"
+                            className="bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300"
+                          >
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Has Retrospective
+                          </Badge>
+                        ) : (
+                          <Badge
+                            variant="outline"
+                            className="text-muted-foreground"
+                          >
+                            No Retrospective
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           )}
         </TabsContent>
       </Tabs>
