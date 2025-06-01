@@ -12,6 +12,7 @@ import {
   Settings,
   ChevronDown,
   Plus,
+  Brain,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -24,6 +25,7 @@ const navigation = [
     icon: Calendar,
   },
   { name: "Kanban Board", href: "/dashboard/kanban", icon: Kanban },
+  { name: "AI Insights", href: "/dashboard/ai-insights", icon: Brain },
   { name: "Teams", href: "/dashboard/teams", icon: Users },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];

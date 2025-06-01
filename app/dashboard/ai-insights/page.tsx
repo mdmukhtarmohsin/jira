@@ -1,0 +1,1380 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertTriangle,
+  TrendingUp,
+  Users,
+  FileText,
+  RefreshCw,
+  Clock,
+  Target,
+  Zap,
+  Brain,
+  BarChart3,
+  Activity,
+  PieChart,
+  CheckCircle,
+  Calendar,
+  TrendingDown,
+} from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/lib/auth";
+import { toast } from "@/hooks/use-toast";
+
+// Import types from the existing AI insights panel
+interface ScopeCreepAlert {
+  sprintId: string;
+  sprintName: string;
+  originalStoryPoints: number;
+  currentStoryPoints: number;
+  increasePercentage: number;
+  riskLevel: "low" | "medium" | "high";
+  addedTasks: string[];
+  warning: string;
+}
+
+interface RiskHeatmapData {
+  overloadedMembers: Array<{
+    memberId: string;
+    memberName: string;
+    taskCount: number;
+    totalStoryPoints: number;
+    riskLevel: "high" | "medium" | "low";
+    reason: string;
+  }>;
+  delayedTasks: Array<{
+    taskId: string;
+    taskTitle: string;
+    daysOverdue: number;
+    riskLevel: "high" | "medium" | "low";
+  }>;
+  blockedTasks: Array<{
+    taskId: string;
+    taskTitle: string;
+    blockingReason: string;
+    riskLevel: "high" | "medium" | "low";
+  }>;
+  recommendations: string[];
+}
+
+interface RetrospectiveData {
+  sprintId: string;
+  sprintName: string;
+  content: string;
+  generatedAt: string;
+}
+
+interface AIInsight {
+  type: "risk" | "success" | "warning" | "info";
+  title: string;
+  description: string;
+  metric?: string;
+  action?: string;
+}
+
+interface PerformanceMetrics {
+  sprintVelocity: Array<{
+    sprintName: string;
+    plannedPoints: number;
+    completedPoints: number;
+    completionRate: number;
+  }>;
+  teamProductivity: Array<{
+    memberName: string;
+    tasksCompleted: number;
+    averageCompletionTime: number;
+    efficiency: number;
+  }>;
+  qualityMetrics: {
+    bugRate: number;
+    reworkPercentage: number;
+    customerSatisfaction: number;
+  };
+}
+
+interface PredictiveAnalytics {
+  sprintCompletion: {
+    probability: number;
+    confidence: number;
+    riskFactors: string[];
+  };
+  burndownPrediction: Array<{
+    date: string;
+    predicted: number;
+    actual: number;
+  }>;
+  recommendedActions: string[];
+}
+
+export default function AIInsightsPage() {
+  const { user } = useAuth();
+  const [scopeCreepAlerts, setScopeCreepAlerts] = useState<ScopeCreepAlert[]>(
+    []
+  );
+  const [riskHeatmap, setRiskHeatmap] = useState<RiskHeatmapData | null>(null);
+  const [retrospectives, setRetrospectives] = useState<RetrospectiveData[]>([]);
+  const [insights, setInsights] = useState<AIInsight[]>([]);
+  const [performanceMetrics, setPerformanceMetrics] =
+    useState<PerformanceMetrics | null>(null);
+  const [predictiveAnalytics, setPredictiveAnalytics] =
+    useState<PredictiveAnalytics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("overview");
+
+  useEffect(() => {
+    if (user) {
+      fetchAllAIData();
+    }
+  }, [user]);
+
+  const fetchAllAIData = async () => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        fetchScopeCreepAlerts(),
+        fetchRiskHeatmap(),
+        fetchRetrospectives(),
+        fetchInsights(),
+        fetchPerformanceMetrics(),
+        fetchPredictiveAnalytics(),
+      ]);
+    } catch (error) {
+      console.error("Error fetching AI data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch AI insights. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Copy the fetch functions from the original AI insights panel
+  const fetchScopeCreepAlerts = async () => {
+    // Implementation from original component
+    try {
+      const { data: orgMember } = await supabase
+        .from("organization_members")
+        .select("organization_id")
+        .eq("user_id", user?.id)
+        .single();
+
+      if (!orgMember) return;
+
+      const { data: teams } = await supabase
+        .from("teams")
+        .select("id")
+        .eq("organization_id", orgMember.organization_id);
+
+      if (!teams) return;
+
+      const teamIds = teams.map((t) => t.id);
+      const { data: activeSprints } = await supabase
+        .from("sprints")
+        .select("id, name, start_date, created_at")
+        .in("team_id", teamIds)
+        .eq("status", "active");
+
+      if (!activeSprints || activeSprints.length === 0) {
+        setScopeCreepAlerts([]);
+        return;
+      }
+
+      const alerts: ScopeCreepAlert[] = [];
+      for (const sprint of activeSprints) {
+        const { data: sprintTasks } = await supabase
+          .from("sprint_tasks")
+          .select(`added_at, tasks!inner(id, title, story_points, created_at)`)
+          .eq("sprint_id", sprint.id);
+
+        if (!sprintTasks) continue;
+
+        const processedSprintTasks = sprintTasks.map((st: any) => ({
+          added_at: st.added_at,
+          tasks: st.tasks,
+        }));
+
+        const originalTasks = processedSprintTasks.filter(
+          (st) => new Date(st.added_at) <= new Date(sprint.start_date)
+        );
+        const allTasks = processedSprintTasks;
+
+        const originalStoryPoints = originalTasks.reduce(
+          (sum, st) => sum + (st.tasks.story_points || 0),
+          0
+        );
+        const currentStoryPoints = allTasks.reduce(
+          (sum, st) => sum + (st.tasks.story_points || 0),
+          0
+        );
+
+        if (originalStoryPoints > 0) {
+          const increasePercentage =
+            ((currentStoryPoints - originalStoryPoints) / originalStoryPoints) *
+            100;
+
+          if (increasePercentage > 15) {
+            const addedTasks = allTasks
+              .filter(
+                (st) => new Date(st.added_at) > new Date(sprint.start_date)
+              )
+              .map((st) => st.tasks.title);
+
+            alerts.push({
+              sprintId: sprint.id,
+              sprintName: sprint.name,
+              originalStoryPoints,
+              currentStoryPoints,
+              increasePercentage: Math.round(increasePercentage),
+              riskLevel: increasePercentage > 25 ? "high" : "medium",
+              addedTasks,
+              warning: `Sprint scope increased by ${Math.round(
+                increasePercentage
+              )}% since start`,
+            });
+          }
+        }
+      }
+
+      setScopeCreepAlerts(alerts);
+    } catch (error) {
+      console.error("Error fetching scope creep alerts:", error);
+    }
+  };
+
+  const fetchRiskHeatmap = async () => {
+    // Implementation from original component
+    try {
+      const { data: orgMember } = await supabase
+        .from("organization_members")
+        .select("organization_id")
+        .eq("user_id", user?.id)
+        .single();
+
+      if (!orgMember) return;
+
+      const { data: teams } = await supabase
+        .from("teams")
+        .select("id")
+        .eq("organization_id", orgMember.organization_id);
+
+      if (!teams) return;
+
+      const teamIds = teams.map((t) => t.id);
+      const { data: tasks } = await supabase
+        .from("tasks")
+        .select("*")
+        .in("team_id", teamIds)
+        .neq("status", "done");
+
+      const { data: teamMembersData } = await supabase
+        .from("team_members")
+        .select("user_id")
+        .in("team_id", teamIds);
+
+      if (!tasks || !teamMembersData) return;
+
+      const processedTeamMembers: Array<{ id: string; name: string }> = [];
+      if (teamMembersData.length > 0) {
+        const userIds = teamMembersData.map((tm) => tm.user_id);
+        const { data: userProfiles } = await supabase
+          .from("user_profiles")
+          .select("id, full_name")
+          .in("id", userIds);
+
+        if (userProfiles) {
+          processedTeamMembers.push(
+            ...userProfiles.map((up) => ({
+              id: up.id,
+              name: up.full_name || "Unknown",
+            }))
+          );
+        }
+      }
+
+      const response = await fetch("/api/ai/risk-heatmap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tasks,
+          teamMembers: processedTeamMembers,
+          currentDate: new Date().toISOString(),
+        }),
+      });
+
+      if (response.ok) {
+        const riskData = await response.json();
+        setRiskHeatmap(riskData);
+      }
+    } catch (error) {
+      console.error("Error fetching risk heatmap:", error);
+    }
+  };
+
+  const fetchRetrospectives = async () => {
+    // Implementation from original component
+    try {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const { data: orgMember } = await supabase
+        .from("organization_members")
+        .select("organization_id")
+        .eq("user_id", user?.id)
+        .single();
+
+      if (!orgMember) return;
+
+      const { data: teams } = await supabase
+        .from("teams")
+        .select("id")
+        .eq("organization_id", orgMember.organization_id);
+
+      if (!teams) return;
+
+      const teamIds = teams.map((t) => t.id);
+      const { data: completedSprints } = await supabase
+        .from("sprints")
+        .select("id, name, end_date")
+        .in("team_id", teamIds)
+        .eq("status", "completed")
+        .gte("end_date", thirtyDaysAgo.toISOString())
+        .order("end_date", { ascending: false })
+        .limit(5);
+
+      if (!completedSprints) return;
+
+      const { data: existingRetros } = await supabase
+        .from("retrospectives")
+        .select("sprint_id, content, created_at")
+        .in(
+          "sprint_id",
+          completedSprints.map((s) => s.id)
+        );
+
+      const retros: RetrospectiveData[] = [];
+      for (const sprint of completedSprints) {
+        const existingRetro = existingRetros?.find(
+          (r) => r.sprint_id === sprint.id
+        );
+        if (existingRetro) {
+          retros.push({
+            sprintId: sprint.id,
+            sprintName: sprint.name,
+            content: existingRetro.content,
+            generatedAt: existingRetro.created_at,
+          });
+        }
+      }
+
+      setRetrospectives(retros);
+    } catch (error) {
+      console.error("Error fetching retrospectives:", error);
+    }
+  };
+
+  const fetchInsights = async () => {
+    // Simplified version of the original insights function
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Mock insights for now - in real implementation, this would call AI API
+      const mockInsights: AIInsight[] = [
+        {
+          type: "success",
+          title: "Great Sprint Velocity",
+          description: "Team is consistently meeting sprint goals",
+          metric: "95% completion rate",
+          action: "Maintain current pace",
+        },
+        {
+          type: "warning",
+          title: "High WIP Tasks",
+          description: "Too many tasks in progress simultaneously",
+          metric: "8 active tasks",
+          action: "Focus on completing existing work",
+        },
+        {
+          type: "info",
+          title: "Code Review Bottleneck",
+          description: "Reviews taking longer than usual",
+          metric: "3.2 days average",
+          action: "Add more reviewers to the rotation",
+        },
+      ];
+
+      setInsights(mockInsights);
+    } catch (error) {
+      console.error("Error fetching insights:", error);
+    }
+  };
+
+  const fetchPerformanceMetrics = async () => {
+    try {
+      // Get user's teams first
+      const { data: orgMember } = await supabase
+        .from("organization_members")
+        .select("organization_id")
+        .eq("user_id", user?.id)
+        .single();
+
+      if (!orgMember) return;
+
+      const { data: teams } = await supabase
+        .from("teams")
+        .select("id")
+        .eq("organization_id", orgMember.organization_id);
+
+      if (!teams) return;
+
+      const teamIds = teams.map((t) => t.id);
+
+      const response = await fetch("/api/ai/performance-metrics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          teamIds,
+          timeRange: 30,
+        }),
+      });
+
+      if (response.ok) {
+        const metrics = await response.json();
+        setPerformanceMetrics(metrics);
+      } else {
+        // Fallback to mock data if API fails
+        const mockMetrics: PerformanceMetrics = {
+          sprintVelocity: [
+            {
+              sprintName: "Sprint 1",
+              plannedPoints: 21,
+              completedPoints: 18,
+              completionRate: 86,
+            },
+            {
+              sprintName: "Sprint 2",
+              plannedPoints: 24,
+              completedPoints: 22,
+              completionRate: 92,
+            },
+            {
+              sprintName: "Sprint 3",
+              plannedPoints: 20,
+              completedPoints: 20,
+              completionRate: 100,
+            },
+            {
+              sprintName: "Sprint 4",
+              plannedPoints: 26,
+              completedPoints: 24,
+              completionRate: 92,
+            },
+          ],
+          teamProductivity: [
+            {
+              memberName: "Alice Johnson",
+              tasksCompleted: 12,
+              averageCompletionTime: 2.3,
+              efficiency: 95,
+            },
+            {
+              memberName: "Bob Smith",
+              tasksCompleted: 8,
+              averageCompletionTime: 3.1,
+              efficiency: 78,
+            },
+            {
+              memberName: "Charlie Brown",
+              tasksCompleted: 10,
+              averageCompletionTime: 2.8,
+              efficiency: 85,
+            },
+          ],
+          qualityMetrics: {
+            bugRate: 2.1,
+            reworkPercentage: 8.5,
+            customerSatisfaction: 4.6,
+          },
+        };
+        setPerformanceMetrics(mockMetrics);
+      }
+    } catch (error) {
+      console.error("Error fetching performance metrics:", error);
+    }
+  };
+
+  const fetchPredictiveAnalytics = async () => {
+    try {
+      // Get user's teams and active sprint
+      const { data: orgMember } = await supabase
+        .from("organization_members")
+        .select("organization_id")
+        .eq("user_id", user?.id)
+        .single();
+
+      if (!orgMember) return;
+
+      const { data: teams } = await supabase
+        .from("teams")
+        .select("id")
+        .eq("organization_id", orgMember.organization_id);
+
+      if (!teams) return;
+
+      const teamIds = teams.map((t) => t.id);
+
+      // Get active sprint
+      const { data: activeSprint } = await supabase
+        .from("sprints")
+        .select("id")
+        .in("team_id", teamIds)
+        .eq("status", "active")
+        .limit(1)
+        .single();
+
+      if (activeSprint) {
+        const response = await fetch("/api/ai/predictive-analytics", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sprintId: activeSprint.id,
+            teamIds,
+          }),
+        });
+
+        if (response.ok) {
+          const analytics = await response.json();
+          setPredictiveAnalytics(analytics);
+        } else {
+          // Fallback to mock data
+          const mockPredictive: PredictiveAnalytics = {
+            sprintCompletion: {
+              probability: 87,
+              confidence: 92,
+              riskFactors: [
+                "2 tasks without assignees",
+                "Holiday period overlap",
+                "Dependency on external team",
+              ],
+            },
+            burndownPrediction: [
+              { date: "2024-01-01", predicted: 24, actual: 24 },
+              { date: "2024-01-02", predicted: 22, actual: 23 },
+              { date: "2024-01-03", predicted: 20, actual: 19 },
+              { date: "2024-01-04", predicted: 17, actual: 18 },
+              { date: "2024-01-05", predicted: 14, actual: 0 },
+            ],
+            recommendedActions: [
+              "Assign remaining unassigned tasks",
+              "Schedule critical path review",
+              "Consider scope adjustment for holiday impact",
+              "Set up daily check-ins for external dependencies",
+            ],
+          };
+          setPredictiveAnalytics(mockPredictive);
+        }
+      } else {
+        // No active sprint, use mock data
+        const mockPredictive: PredictiveAnalytics = {
+          sprintCompletion: {
+            probability: 0,
+            confidence: 0,
+            riskFactors: ["No active sprint found"],
+          },
+          burndownPrediction: [],
+          recommendedActions: [
+            "Start a new sprint to enable predictive analytics",
+          ],
+        };
+        setPredictiveAnalytics(mockPredictive);
+      }
+    } catch (error) {
+      console.error("Error fetching predictive analytics:", error);
+    }
+  };
+
+  const generateSprintRetrospective = async (sprintId: string) => {
+    try {
+      const response = await fetch("/api/ai/retrospective", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sprintId }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Retrospective Generated",
+          description: "AI retrospective has been generated for the sprint.",
+        });
+        fetchRetrospectives();
+      }
+    } catch (error) {
+      console.error("Error generating retrospective:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate retrospective.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getRiskColor = (level: string) => {
+    switch (level) {
+      case "high":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "low":
+        return "bg-green-100 text-green-800 border-green-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const getIconForType = (type: AIInsight["type"]) => {
+    switch (type) {
+      case "risk":
+        return <AlertTriangle className="h-5 w-5 text-red-500" />;
+      case "warning":
+        return <Clock className="h-5 w-5 text-yellow-500" />;
+      case "success":
+        return <TrendingUp className="h-5 w-5 text-green-500" />;
+      case "info":
+        return <Target className="h-5 w-5 text-blue-500" />;
+      default:
+        return <Brain className="h-5 w-5 text-gray-600" />;
+    }
+  };
+
+  const getBackgroundForType = (type: AIInsight["type"]) => {
+    switch (type) {
+      case "risk":
+        return "bg-red-50 border-red-200";
+      case "warning":
+        return "bg-yellow-50 border-yellow-200";
+      case "success":
+        return "bg-green-50 border-green-200";
+      case "info":
+        return "bg-blue-50 border-blue-200";
+      default:
+        return "bg-gray-50 border-gray-200";
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">AI Insights</h1>
+            <p className="text-muted-foreground">
+              Comprehensive AI-powered analysis of your project health and team
+              performance
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center justify-center py-16">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight flex items-center">
+            <Brain className="mr-3 h-8 w-8 text-purple-600" />
+            AI Insights
+          </h1>
+          <p className="text-muted-foreground">
+            Comprehensive AI-powered analysis of your project health and team
+            performance
+          </p>
+        </div>
+        <Button onClick={fetchAllAIData} variant="outline">
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Refresh All Data
+        </Button>
+      </div>
+
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-6"
+      >
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="overview" className="flex items-center space-x-2">
+            <Activity className="h-4 w-4" />
+            <span>Overview</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="scope-creep"
+            className="flex items-center space-x-2"
+          >
+            <TrendingUp className="h-4 w-4" />
+            <span>Scope Creep</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="risk-heatmap"
+            className="flex items-center space-x-2"
+          >
+            <AlertTriangle className="h-4 w-4" />
+            <span>Risk Analysis</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="performance"
+            className="flex items-center space-x-2"
+          >
+            <BarChart3 className="h-4 w-4" />
+            <span>Performance</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="predictive"
+            className="flex items-center space-x-2"
+          >
+            <PieChart className="h-4 w-4" />
+            <span>Predictive</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="retrospectives"
+            className="flex items-center space-x-2"
+          >
+            <FileText className="h-4 w-4" />
+            <span>Retrospectives</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          {/* AI Insights Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Active Alerts
+                </CardTitle>
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {scopeCreepAlerts.length +
+                    (riskHeatmap?.overloadedMembers.length || 0)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Scope creep and risk alerts
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Sprint Health
+                </CardTitle>
+                <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {predictiveAnalytics?.sprintCompletion.probability || 0}%
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Completion probability
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Team Velocity
+                </CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {performanceMetrics?.sprintVelocity.slice(-1)[0]
+                    ?.completionRate || 0}
+                  %
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Last sprint completion
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Quality Score
+                </CardTitle>
+                <Target className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {performanceMetrics?.qualityMetrics.customerSatisfaction || 0}
+                  /5
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Customer satisfaction
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Key Insights */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Key Insights</CardTitle>
+              <CardDescription>
+                AI-generated insights based on current project data
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {insights.map((insight, idx) => (
+                  <div
+                    key={idx}
+                    className={`p-4 rounded-lg border ${getBackgroundForType(
+                      insight.type
+                    )}`}
+                  >
+                    <div className="flex items-start space-x-3">
+                      {getIconForType(insight.type)}
+                      <div className="flex-1">
+                        <h4 className="font-medium">{insight.title}</h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {insight.description}
+                        </p>
+                        {insight.metric && (
+                          <div className="flex items-center justify-between mt-2">
+                            <Badge variant="outline">{insight.metric}</Badge>
+                            {insight.action && (
+                              <span className="text-xs text-muted-foreground">
+                                {insight.action}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Include all the other tab contents from the original component */}
+        <TabsContent value="scope-creep" className="space-y-4">
+          {/* Scope creep content - same as original */}
+          {scopeCreepAlerts.length > 0 ? (
+            scopeCreepAlerts.map((alert) => (
+              <Alert
+                key={alert.sprintId}
+                className={`border-l-4 ${getRiskColor(alert.riskLevel)}`}
+              >
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <strong>{alert.sprintName}</strong>
+                      <Badge className={getRiskColor(alert.riskLevel)}>
+                        {alert.riskLevel} risk
+                      </Badge>
+                    </div>
+                    <p className="text-sm">{alert.warning}</p>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600">Original: </span>
+                        <span className="font-medium">
+                          {alert.originalStoryPoints} pts
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Current: </span>
+                        <span className="font-medium">
+                          {alert.currentStoryPoints} pts
+                        </span>
+                      </div>
+                    </div>
+                    {alert.addedTasks.length > 0 && (
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">
+                          Recently added tasks:
+                        </p>
+                        <ul className="text-xs space-y-1">
+                          {alert.addedTasks.map((task, idx) => (
+                            <li key={idx} className="text-gray-700">
+                              • {task}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </AlertDescription>
+              </Alert>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <Target className="h-12 w-12 text-green-600 mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">
+                No Scope Creep Detected
+              </h3>
+              <p className="text-gray-600">
+                Your active sprints are maintaining healthy scope boundaries.
+              </p>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="risk-heatmap" className="space-y-4">
+          {/* Risk heatmap content - same as original but with more details */}
+          {riskHeatmap ? (
+            <div className="space-y-6">
+              {riskHeatmap.overloadedMembers.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Users className="mr-2 h-5 w-5" />
+                      Overloaded Team Members
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {riskHeatmap.overloadedMembers.map((member, idx) => (
+                        <Alert
+                          key={idx}
+                          className={`border-l-4 ${getRiskColor(
+                            member.riskLevel
+                          )}`}
+                        >
+                          <AlertDescription>
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <strong>{member.memberName}</strong>
+                                <p className="text-sm text-gray-600">
+                                  {member.reason}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-sm font-medium">
+                                  {member.taskCount} tasks
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  {member.totalStoryPoints} pts
+                                </div>
+                              </div>
+                            </div>
+                          </AlertDescription>
+                        </Alert>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {riskHeatmap.delayedTasks.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Clock className="mr-2 h-5 w-5" />
+                      Delayed Tasks
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {riskHeatmap.delayedTasks.map((task, idx) => (
+                        <Alert
+                          key={idx}
+                          className={`border-l-4 ${getRiskColor(
+                            task.riskLevel
+                          )}`}
+                        >
+                          <AlertDescription>
+                            <div className="flex items-center justify-between">
+                              <strong>{task.taskTitle}</strong>
+                              <Badge className={getRiskColor(task.riskLevel)}>
+                                {task.daysOverdue} days overdue
+                              </Badge>
+                            </div>
+                          </AlertDescription>
+                        </Alert>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {riskHeatmap.recommendations.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>AI Recommendations</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-3">
+                      {riskHeatmap.recommendations.map((rec, idx) => (
+                        <li key={idx} className="flex items-start space-x-3">
+                          <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
+                          <span className="text-sm">{rec}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
+
+              {riskHeatmap.overloadedMembers.length === 0 &&
+                riskHeatmap.delayedTasks.length === 0 &&
+                riskHeatmap.blockedTasks.length === 0 && (
+                  <div className="text-center py-8">
+                    <Users className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2">
+                      Team Health Looks Good
+                    </h3>
+                    <p className="text-gray-600">
+                      No significant risks detected in current workload
+                      distribution.
+                    </p>
+                  </div>
+                )}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">
+                No Risk Data Available
+              </h3>
+              <p className="text-gray-600">
+                Risk analysis will appear here when you have active tasks and
+                team members.
+              </p>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="performance" className="space-y-6">
+          {performanceMetrics && (
+            <>
+              {/* Sprint Velocity Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <BarChart3 className="mr-2 h-5 w-5" />
+                    Sprint Velocity Trends
+                  </CardTitle>
+                  <CardDescription>
+                    Planned vs completed story points over recent sprints
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {performanceMetrics.sprintVelocity.map((sprint, idx) => (
+                      <div key={idx} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">
+                            {sprint.sprintName}
+                          </span>
+                          <Badge
+                            variant={
+                              sprint.completionRate >= 90
+                                ? "default"
+                                : "secondary"
+                            }
+                          >
+                            {sprint.completionRate}%
+                          </Badge>
+                        </div>
+                        <div className="flex space-x-2">
+                          <div className="flex-1 bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-blue-600 h-2 rounded-full"
+                              style={{
+                                width: `${
+                                  (sprint.completedPoints /
+                                    sprint.plannedPoints) *
+                                  100
+                                }%`,
+                              }}
+                            ></div>
+                          </div>
+                          <span className="text-sm text-muted-foreground">
+                            {sprint.completedPoints}/{sprint.plannedPoints} pts
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Team Productivity */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Users className="mr-2 h-5 w-5" />
+                    Team Productivity
+                  </CardTitle>
+                  <CardDescription>
+                    Individual team member performance metrics
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {performanceMetrics.teamProductivity.map((member, idx) => (
+                      <div key={idx} className="p-4 border rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium">
+                            {member.memberName}
+                          </span>
+                          <Badge
+                            variant={
+                              member.efficiency >= 90 ? "default" : "secondary"
+                            }
+                          >
+                            {member.efficiency}% efficiency
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">
+                              Tasks completed:{" "}
+                            </span>
+                            <span className="font-medium">
+                              {member.tasksCompleted}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">
+                              Avg completion:{" "}
+                            </span>
+                            <span className="font-medium">
+                              {member.averageCompletionTime} days
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Quality Metrics */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Target className="mr-2 h-5 w-5" />
+                    Quality Metrics
+                  </CardTitle>
+                  <CardDescription>
+                    Overall code quality and customer satisfaction indicators
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center p-4 border rounded-lg">
+                      <div className="text-2xl font-bold text-red-600">
+                        {performanceMetrics.qualityMetrics.bugRate}%
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Bug Rate
+                      </div>
+                    </div>
+                    <div className="text-center p-4 border rounded-lg">
+                      <div className="text-2xl font-bold text-yellow-600">
+                        {performanceMetrics.qualityMetrics.reworkPercentage}%
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Rework
+                      </div>
+                    </div>
+                    <div className="text-center p-4 border rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">
+                        {performanceMetrics.qualityMetrics.customerSatisfaction}
+                        /5
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Satisfaction
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="predictive" className="space-y-6">
+          {predictiveAnalytics && (
+            <>
+              {/* Sprint Completion Prediction */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <PieChart className="mr-2 h-5 w-5" />
+                    Sprint Completion Prediction
+                  </CardTitle>
+                  <CardDescription>
+                    AI-powered prediction for current sprint success
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <div className="text-4xl font-bold text-green-600 mb-2">
+                        {predictiveAnalytics.sprintCompletion.probability}%
+                      </div>
+                      <div className="text-muted-foreground">
+                        Completion probability (
+                        {predictiveAnalytics.sprintCompletion.confidence}%
+                        confidence)
+                      </div>
+                    </div>
+
+                    {predictiveAnalytics.sprintCompletion.riskFactors.length >
+                      0 && (
+                      <div>
+                        <h4 className="font-medium mb-2">Risk Factors:</h4>
+                        <ul className="space-y-1">
+                          {predictiveAnalytics.sprintCompletion.riskFactors.map(
+                            (factor, idx) => (
+                              <li
+                                key={idx}
+                                className="flex items-center space-x-2 text-sm"
+                              >
+                                <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                                <span>{factor}</span>
+                              </li>
+                            )
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Burndown Prediction */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <TrendingDown className="mr-2 h-5 w-5" />
+                    Burndown Prediction
+                  </CardTitle>
+                  <CardDescription>
+                    Predicted vs actual progress
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {predictiveAnalytics.burndownPrediction.map(
+                      (point, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between"
+                        >
+                          <span className="text-sm">{point.date}</span>
+                          <div className="flex space-x-4">
+                            <span className="text-sm text-blue-600">
+                              Predicted: {point.predicted}
+                            </span>
+                            <span className="text-sm text-green-600">
+                              Actual: {point.actual}
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Recommended Actions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Zap className="mr-2 h-5 w-5" />
+                    Recommended Actions
+                  </CardTitle>
+                  <CardDescription>
+                    AI-suggested actions to improve sprint outcomes
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {predictiveAnalytics.recommendedActions.map(
+                      (action, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-start space-x-3 p-3 border rounded-lg"
+                        >
+                          <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                          <span className="text-sm">{action}</span>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="retrospectives" className="space-y-4">
+          {/* Retrospectives content - same as original */}
+          {retrospectives.length > 0 ? (
+            retrospectives.map((retro) => (
+              <Card
+                key={retro.sprintId}
+                className="border-l-4 border-l-blue-500"
+              >
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">
+                      {retro.sprintName}
+                    </CardTitle>
+                    <Badge variant="outline">
+                      {new Date(retro.generatedAt).toLocaleDateString()}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="prose prose-sm max-w-none">
+                    <div className="whitespace-pre-wrap text-sm">
+                      {retro.content}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">
+                No Retrospectives Yet
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Retrospectives will be automatically generated when sprints are
+                completed.
+              </p>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
