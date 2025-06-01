@@ -44,6 +44,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/auth";
 import { toast } from "@/hooks/use-toast";
+import { Markdown } from "@/components/ui/markdown";
 
 // Import types from the existing AI insights panel
 interface ScopeCreepAlert {
@@ -1720,11 +1721,10 @@ export default function AIInsightsPage() {
                   </CardHeader>
                   <CardContent>
                     {selectedSprint.retrospective ? (
-                      <div className="prose prose-sm max-w-none dark:prose-invert">
-                        <div className="whitespace-pre-wrap text-sm text-foreground">
-                          {selectedSprint.retrospective.content}
-                        </div>
-                      </div>
+                      <Markdown
+                        content={selectedSprint.retrospective.content}
+                        className="text-sm"
+                      />
                     ) : (
                       <div className="text-center py-8">
                         <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

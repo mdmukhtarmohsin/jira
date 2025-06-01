@@ -26,6 +26,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/auth";
 import { toast } from "@/hooks/use-toast";
+import { Markdown } from "@/components/ui/markdown";
 
 interface ScopeCreepAlert {
   sprintId: string;
@@ -919,11 +920,7 @@ export function AiInsightsPanel() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="prose prose-sm max-w-none">
-                      <div className="whitespace-pre-wrap text-sm ">
-                        {retro.content}
-                      </div>
-                    </div>
+                    <Markdown content={retro.content} className="text-sm" />
                   </CardContent>
                 </Card>
               ))
