@@ -201,8 +201,8 @@ function AIAnalysisLoading() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center">
-            <Brain className="mr-3 h-8 w-8 text-purple-600" />
+          <h1 className="text-3xl font-bold tracking-tight flex items-center text-foreground">
+            <Brain className="mr-3 h-8 w-8 text-purple-600 dark:text-purple-400" />
             AI Insights
           </h1>
           <p className="text-muted-foreground">
@@ -213,29 +213,29 @@ function AIAnalysisLoading() {
       </div>
 
       {/* Loading Analysis Card */}
-      <Card className="border-purple-200 bg-gradient-to-r from-purple-50 to-blue-50">
+      <Card className="border-purple-200 dark:border-purple-800 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20">
         <CardContent className="pt-6">
           <div className="flex flex-col items-center space-y-6">
             {/* Animated Icon and Spinner */}
             <div className="relative">
               <div className="absolute inset-0 animate-ping">
-                <div className="w-16 h-16 border-4 border-purple-200 rounded-full"></div>
+                <div className="w-16 h-16 border-4 border-purple-200 dark:border-purple-800 rounded-full"></div>
               </div>
-              <div className="relative w-16 h-16 border-4 border-purple-600 rounded-full border-t-transparent animate-spin"></div>
+              <div className="relative w-16 h-16 border-4 border-purple-600 dark:border-purple-400 rounded-full border-t-transparent animate-spin"></div>
               <div className="absolute inset-0 flex items-center justify-center">
                 <CurrentIcon
-                  className={`h-6 w-6 text-purple-600 transition-opacity duration-200 ${animationClass}`}
+                  className={`h-6 w-6 text-purple-600 dark:text-purple-400 transition-opacity duration-200 ${animationClass}`}
                 />
               </div>
             </div>
 
             {/* Analysis Status */}
             <div className="text-center space-y-2">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-foreground">
                 Running AI Analysis
               </h3>
               <p
-                className={`text-sm text-gray-600 transition-opacity duration-200 ${animationClass}`}
+                className={`text-sm text-muted-foreground transition-opacity duration-200 ${animationClass}`}
               >
                 {loadingSteps[currentStep].message}
               </p>
@@ -243,15 +243,15 @@ function AIAnalysisLoading() {
 
             {/* Progress Indicator */}
             <div className="w-full max-w-md space-y-2">
-              <div className="flex justify-between text-xs text-gray-500">
+              <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Progress</span>
                 <span>
                   {Math.round(((currentStep + 1) / loadingSteps.length) * 100)}%
                 </span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-muted rounded-full h-2">
                 <div
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 dark:from-purple-400 dark:to-blue-400 h-2 rounded-full transition-all duration-500 ease-out"
                   style={{
                     width: `${
                       ((currentStep + 1) / loadingSteps.length) * 100
@@ -273,27 +273,29 @@ function AIAnalysisLoading() {
                     key={step.step}
                     className={`flex flex-col items-center p-3 rounded-lg border transition-all duration-300 ${
                       isActive
-                        ? "border-purple-500 bg-purple-50 scale-105"
+                        ? "border-purple-500 dark:border-purple-400 bg-purple-50 dark:bg-purple-950/30 scale-105"
                         : isCompleted
-                        ? "border-green-500 bg-green-50"
-                        : "border-gray-200 bg-gray-50"
+                        ? "border-green-500 dark:border-green-400 bg-green-50 dark:bg-green-950/30"
+                        : "border-border bg-card"
                     }`}
                   >
                     <div
                       className={`p-2 rounded-full ${
                         isActive
-                          ? "bg-purple-100"
+                          ? "bg-purple-100 dark:bg-purple-900/50"
                           : isCompleted
-                          ? "bg-green-100"
-                          : "bg-gray-100"
+                          ? "bg-green-100 dark:bg-green-900/50"
+                          : "bg-muted"
                       }`}
                     >
                       {isCompleted ? (
-                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
                       ) : (
                         <StepIcon
                           className={`h-4 w-4 ${
-                            isActive ? "text-purple-600" : "text-gray-400"
+                            isActive
+                              ? "text-purple-600 dark:text-purple-400"
+                              : "text-muted-foreground"
                           }`}
                         />
                       )}
@@ -301,10 +303,10 @@ function AIAnalysisLoading() {
                     <span
                       className={`text-xs text-center mt-1 font-medium ${
                         isActive
-                          ? "text-purple-700"
+                          ? "text-purple-700 dark:text-purple-300"
                           : isCompleted
-                          ? "text-green-700"
-                          : "text-gray-500"
+                          ? "text-green-700 dark:text-green-300"
+                          : "text-muted-foreground"
                       }`}
                     >
                       {step.step.replace("-", " ")}
@@ -315,13 +317,13 @@ function AIAnalysisLoading() {
             </div>
 
             {/* Fun AI Facts */}
-            <div className="mt-6 p-4 bg-white rounded-lg border border-purple-100 max-w-md">
+            <div className="mt-6 p-4 bg-background border border-purple-100 dark:border-purple-800 rounded-lg max-w-md">
               <div className="text-center">
-                <Search className="h-5 w-5 text-purple-600 mx-auto mb-2" />
-                <p className="text-xs text-gray-600">
+                <Search className="h-5 w-5 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
+                <p className="text-xs text-muted-foreground">
                   <span className="font-medium">Did you know?</span> Our AI
                   analyzes over{" "}
-                  <span className="text-purple-600 font-medium">
+                  <span className="text-purple-600 dark:text-purple-400 font-medium">
                     50+ data points
                   </span>{" "}
                   to generate insights about your team's performance and sprint
@@ -843,43 +845,49 @@ export default function AIInsightsPage() {
   const getRiskColor = (level: string) => {
     switch (level) {
       case "high":
-        return "bg-red-100 text-red-800 border-red-200";
+        return "bg-red-100 dark:bg-red-950/30 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800";
       case "medium":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+        return "bg-yellow-100 dark:bg-yellow-950/30 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800";
       case "low":
-        return "bg-green-100 text-green-800 border-green-200";
+        return "bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-muted text-muted-foreground border-border";
     }
   };
 
   const getIconForType = (type: AIInsight["type"]) => {
     switch (type) {
       case "risk":
-        return <AlertTriangle className="h-5 w-5 text-red-500" />;
+        return (
+          <AlertTriangle className="h-5 w-5 text-red-500 dark:text-red-400" />
+        );
       case "warning":
-        return <Clock className="h-5 w-5 text-yellow-500" />;
+        return (
+          <Clock className="h-5 w-5 text-yellow-500 dark:text-yellow-400" />
+        );
       case "success":
-        return <TrendingUp className="h-5 w-5 text-green-500" />;
+        return (
+          <TrendingUp className="h-5 w-5 text-green-500 dark:text-green-400" />
+        );
       case "info":
-        return <Target className="h-5 w-5 text-blue-500" />;
+        return <Target className="h-5 w-5 text-blue-500 dark:text-blue-400" />;
       default:
-        return <Brain className="h-5 w-5 text-gray-600" />;
+        return <Brain className="h-5 w-5 text-muted-foreground" />;
     }
   };
 
   const getBackgroundForType = (type: AIInsight["type"]) => {
     switch (type) {
       case "risk":
-        return "bg-red-50 border-red-200";
+        return "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800";
       case "warning":
-        return "bg-yellow-50 border-yellow-200";
+        return "bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800";
       case "success":
-        return "bg-green-50 border-green-200";
+        return "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800";
       case "info":
-        return "bg-blue-50 border-blue-200";
+        return "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800";
       default:
-        return "bg-gray-50 border-gray-200";
+        return "bg-muted border-border";
     }
   };
 
@@ -891,8 +899,8 @@ export default function AIInsightsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center">
-            <Brain className="mr-3 h-8 w-8 text-purple-600" />
+          <h1 className="text-3xl font-bold tracking-tight flex items-center text-foreground">
+            <Brain className="mr-3 h-8 w-8 text-purple-600 dark:text-purple-400" />
             AI Insights
           </h1>
           <p className="text-muted-foreground">
@@ -906,50 +914,43 @@ export default function AIInsightsPage() {
         </Button>
       </div>
 
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="space-y-6"
-      >
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="overview" className="flex items-center space-x-2">
-            <Activity className="h-4 w-4" />
-            <span>Overview</span>
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-6 bg-muted dark:bg-muted/50">
+          <TabsTrigger
+            value="overview"
+            className="text-sm font-medium data-[state=active]:text-foreground"
+          >
+            Overview
           </TabsTrigger>
           <TabsTrigger
             value="scope-creep"
-            className="flex items-center space-x-2"
+            className="text-sm font-medium data-[state=active]:text-foreground"
           >
-            <TrendingUp className="h-4 w-4" />
-            <span>Scope Creep</span>
+            Scope Creep
           </TabsTrigger>
           <TabsTrigger
-            value="risk-heatmap"
-            className="flex items-center space-x-2"
+            value="risk-analysis"
+            className="text-sm font-medium data-[state=active]:text-foreground"
           >
-            <AlertTriangle className="h-4 w-4" />
-            <span>Risk Analysis</span>
+            Risk Analysis
           </TabsTrigger>
           <TabsTrigger
             value="performance"
-            className="flex items-center space-x-2"
+            className="text-sm font-medium data-[state=active]:text-foreground"
           >
-            <BarChart3 className="h-4 w-4" />
-            <span>Performance</span>
+            Performance
           </TabsTrigger>
           <TabsTrigger
             value="predictive"
-            className="flex items-center space-x-2"
+            className="text-sm font-medium data-[state=active]:text-foreground"
           >
-            <PieChart className="h-4 w-4" />
-            <span>Predictive</span>
+            Predictive
           </TabsTrigger>
           <TabsTrigger
             value="retrospectives"
-            className="flex items-center space-x-2"
+            className="text-sm font-medium data-[state=active]:text-foreground"
           >
-            <FileText className="h-4 w-4" />
-            <span>Retrospectives</span>
+            Retrospectives
           </TabsTrigger>
         </TabsList>
 
@@ -1089,13 +1090,15 @@ export default function AIInsightsPage() {
                     <p className="text-sm">{alert.warning}</p>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-gray-600">Original: </span>
+                        <span className="text-muted-foreground">
+                          Original:{" "}
+                        </span>
                         <span className="font-medium">
                           {alert.originalStoryPoints} pts
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-600">Current: </span>
+                        <span className="text-muted-foreground">Current: </span>
                         <span className="font-medium">
                           {alert.currentStoryPoints} pts
                         </span>
@@ -1103,12 +1106,12 @@ export default function AIInsightsPage() {
                     </div>
                     {alert.addedTasks.length > 0 && (
                       <div>
-                        <p className="text-sm text-gray-600 mb-1">
+                        <p className="text-sm text-muted-foreground mb-1">
                           Recently added tasks:
                         </p>
                         <ul className="text-xs space-y-1">
                           {alert.addedTasks.map((task, idx) => (
-                            <li key={idx} className="text-gray-700">
+                            <li key={idx} className="text-foreground/80">
                               • {task}
                             </li>
                           ))}
@@ -1121,18 +1124,18 @@ export default function AIInsightsPage() {
             ))
           ) : (
             <div className="text-center py-8">
-              <Target className="h-12 w-12 text-green-600 mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">
+              <Target className="h-12 w-12 text-green-600 dark:text-green-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2 text-foreground">
                 No Scope Creep Detected
               </h3>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Your active sprints are maintaining healthy scope boundaries.
               </p>
             </div>
           )}
         </TabsContent>
 
-        <TabsContent value="risk-heatmap" className="space-y-4">
+        <TabsContent value="risk-analysis" className="space-y-4">
           {/* Risk heatmap content - same as original but with more details */}
           {riskHeatmap ? (
             <div className="space-y-6">
@@ -1156,16 +1159,18 @@ export default function AIInsightsPage() {
                           <AlertDescription>
                             <div className="flex items-center justify-between">
                               <div>
-                                <strong>{member.memberName}</strong>
-                                <p className="text-sm text-gray-600">
+                                <strong className="text-foreground">
+                                  {member.memberName}
+                                </strong>
+                                <p className="text-sm text-muted-foreground">
                                   {member.reason}
                                 </p>
                               </div>
                               <div className="text-right">
-                                <div className="text-sm font-medium">
+                                <div className="text-sm font-medium text-foreground">
                                   {member.taskCount} tasks
                                 </div>
-                                <div className="text-sm text-gray-600">
+                                <div className="text-sm text-muted-foreground">
                                   {member.totalStoryPoints} pts
                                 </div>
                               </div>
@@ -1197,7 +1202,9 @@ export default function AIInsightsPage() {
                         >
                           <AlertDescription>
                             <div className="flex items-center justify-between">
-                              <strong>{task.taskTitle}</strong>
+                              <strong className="text-foreground">
+                                {task.taskTitle}
+                              </strong>
                               <Badge className={getRiskColor(task.riskLevel)}>
                                 {task.daysOverdue} days overdue
                               </Badge>
@@ -1219,8 +1226,8 @@ export default function AIInsightsPage() {
                     <ul className="space-y-3">
                       {riskHeatmap.recommendations.map((rec, idx) => (
                         <li key={idx} className="flex items-start space-x-3">
-                          <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
-                          <span className="text-sm">{rec}</span>
+                          <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full mt-2"></div>
+                          <span className="text-sm text-foreground">{rec}</span>
                         </li>
                       ))}
                     </ul>
@@ -1232,11 +1239,11 @@ export default function AIInsightsPage() {
                 riskHeatmap.delayedTasks.length === 0 &&
                 riskHeatmap.blockedTasks.length === 0 && (
                   <div className="text-center py-8">
-                    <Users className="h-12 w-12 text-green-600 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">
+                    <Users className="h-12 w-12 text-green-600 dark:text-green-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2 text-foreground">
                       Team Health Looks Good
                     </h3>
-                    <p className="text-gray-600">
+                    <p className="text-muted-foreground">
                       No significant risks detected in current workload
                       distribution.
                     </p>
@@ -1245,11 +1252,11 @@ export default function AIInsightsPage() {
             </div>
           ) : (
             <div className="text-center py-8">
-              <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">
+              <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2 text-foreground">
                 No Risk Data Available
               </h3>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Risk analysis will appear here when you have active tasks and
                 team members.
               </p>
@@ -1276,7 +1283,7 @@ export default function AIInsightsPage() {
                     {performanceMetrics.sprintVelocity.map((sprint, idx) => (
                       <div key={idx} className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="font-medium">
+                          <span className="font-medium text-foreground">
                             {sprint.sprintName}
                           </span>
                           <Badge
@@ -1290,9 +1297,9 @@ export default function AIInsightsPage() {
                           </Badge>
                         </div>
                         <div className="flex space-x-2">
-                          <div className="flex-1 bg-gray-200 rounded-full h-2">
+                          <div className="flex-1 bg-muted dark:bg-muted/50 rounded-full h-2">
                             <div
-                              className="bg-blue-600 h-2 rounded-full"
+                              className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full"
                               style={{
                                 width: `${
                                   (sprint.completedPoints /
@@ -1302,9 +1309,10 @@ export default function AIInsightsPage() {
                               }}
                             ></div>
                           </div>
-                          <span className="text-sm text-muted-foreground">
-                            {sprint.completedPoints}/{sprint.plannedPoints} pts
-                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm text-muted-foreground">
+                          <span>Planned: {sprint.plannedPoints}</span>
+                          <span>Completed: {sprint.completedPoints}</span>
                         </div>
                       </div>
                     ))}
@@ -1326,9 +1334,12 @@ export default function AIInsightsPage() {
                 <CardContent>
                   <div className="space-y-4">
                     {performanceMetrics.teamProductivity.map((member, idx) => (
-                      <div key={idx} className="p-4 border rounded-lg">
+                      <div
+                        key={idx}
+                        className="p-4 border rounded-lg dark:border-border"
+                      >
                         <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium">
+                          <span className="font-medium text-foreground">
                             {member.memberName}
                           </span>
                           <Badge
@@ -1344,7 +1355,7 @@ export default function AIInsightsPage() {
                             <span className="text-muted-foreground">
                               Tasks completed:{" "}
                             </span>
-                            <span className="font-medium">
+                            <span className="font-medium text-foreground">
                               {member.tasksCompleted}
                             </span>
                           </div>
@@ -1352,7 +1363,7 @@ export default function AIInsightsPage() {
                             <span className="text-muted-foreground">
                               Avg completion:{" "}
                             </span>
-                            <span className="font-medium">
+                            <span className="font-medium text-foreground">
                               {member.averageCompletionTime} days
                             </span>
                           </div>
@@ -1376,24 +1387,24 @@ export default function AIInsightsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="text-center p-4 border rounded-lg">
-                      <div className="text-2xl font-bold text-red-600">
+                    <div className="text-center p-4 border rounded-lg dark:border-border">
+                      <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                         {performanceMetrics.qualityMetrics.bugRate}%
                       </div>
                       <div className="text-sm text-muted-foreground">
                         Bug Rate
                       </div>
                     </div>
-                    <div className="text-center p-4 border rounded-lg">
-                      <div className="text-2xl font-bold text-yellow-600">
+                    <div className="text-center p-4 border rounded-lg dark:border-border">
+                      <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                         {performanceMetrics.qualityMetrics.reworkPercentage}%
                       </div>
                       <div className="text-sm text-muted-foreground">
                         Rework
                       </div>
                     </div>
-                    <div className="text-center p-4 border rounded-lg">
-                      <div className="text-2xl font-bold text-green-600">
+                    <div className="text-center p-4 border rounded-lg dark:border-border">
+                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                         {performanceMetrics.qualityMetrics.customerSatisfaction}
                         /5
                       </div>
@@ -1425,7 +1436,7 @@ export default function AIInsightsPage() {
                 <CardContent>
                   <div className="space-y-4">
                     <div className="text-center">
-                      <div className="text-4xl font-bold text-green-600 mb-2">
+                      <div className="text-4xl font-bold text-green-600 dark:text-green-400 mb-2">
                         {predictiveAnalytics.sprintCompletion.probability}%
                       </div>
                       <div className="text-muted-foreground">
@@ -1438,7 +1449,9 @@ export default function AIInsightsPage() {
                     {predictiveAnalytics.sprintCompletion.riskFactors.length >
                       0 && (
                       <div>
-                        <h4 className="font-medium mb-2">Risk Factors:</h4>
+                        <h4 className="font-medium mb-2 text-foreground">
+                          Risk Factors:
+                        </h4>
                         <ul className="space-y-1">
                           {predictiveAnalytics.sprintCompletion.riskFactors.map(
                             (factor, idx) => (
@@ -1446,8 +1459,10 @@ export default function AIInsightsPage() {
                                 key={idx}
                                 className="flex items-center space-x-2 text-sm"
                               >
-                                <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                                <span>{factor}</span>
+                                <AlertTriangle className="h-4 w-4 text-yellow-500 dark:text-yellow-400" />
+                                <span className="text-foreground">
+                                  {factor}
+                                </span>
                               </li>
                             )
                           )}
@@ -1477,12 +1492,14 @@ export default function AIInsightsPage() {
                           key={idx}
                           className="flex items-center justify-between"
                         >
-                          <span className="text-sm">{point.date}</span>
+                          <span className="text-sm text-foreground">
+                            {point.date}
+                          </span>
                           <div className="flex space-x-4">
-                            <span className="text-sm text-blue-600">
+                            <span className="text-sm text-blue-600 dark:text-blue-400">
                               Predicted: {point.predicted}
                             </span>
-                            <span className="text-sm text-green-600">
+                            <span className="text-sm text-green-600 dark:text-green-400">
                               Actual: {point.actual}
                             </span>
                           </div>
@@ -1510,10 +1527,12 @@ export default function AIInsightsPage() {
                       (action, idx) => (
                         <div
                           key={idx}
-                          className="flex items-start space-x-3 p-3 border rounded-lg"
+                          className="flex items-start space-x-3 p-3 border rounded-lg dark:border-border"
                         >
-                          <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                          <span className="text-sm">{action}</span>
+                          <CheckCircle className="h-5 w-5 text-green-500 dark:text-green-400 mt-0.5" />
+                          <span className="text-sm text-foreground">
+                            {action}
+                          </span>
                         </div>
                       )
                     )}
@@ -1543,8 +1562,8 @@ export default function AIInsightsPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="prose prose-sm max-w-none">
-                    <div className="whitespace-pre-wrap text-sm">
+                  <div className="prose prose-sm max-w-none dark:prose-invert">
+                    <div className="whitespace-pre-wrap text-sm text-foreground">
                       {retro.content}
                     </div>
                   </div>
@@ -1553,11 +1572,11 @@ export default function AIInsightsPage() {
             ))
           ) : (
             <div className="text-center py-8">
-              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">
+              <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2 text-foreground">
                 No Retrospectives Yet
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-muted-foreground mb-4">
                 Retrospectives will be automatically generated when sprints are
                 completed.
               </p>
