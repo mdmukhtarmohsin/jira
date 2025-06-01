@@ -46,7 +46,7 @@ export function Features() {
           <h2 className="text-3xl font-bold tracking-tight  sm:text-4xl">
             AI-Enhanced Project Management
           </h2>
-          <p className="mt-6 text-lg leading-8 text-gray-600">
+          <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400">
             Everything you need to run efficient sprints with intelligent
             automation
           </p>
@@ -63,7 +63,7 @@ export function Features() {
                   <CardTitle className="text-xl">{feature.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <CardDescription className="text-gray-600">
+                  <CardDescription className="text-gray-600 dark:text-gray-400">
                     {feature.description}
                   </CardDescription>
                 </CardContent>

@@ -360,7 +360,7 @@ export function CreateSprintWorkflow({
                       </Avatar>
                       <span className="text-sm font-medium">{member.name}</span>
                     </div>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
                       {member.capacity}h
                     </span>
                   </div>

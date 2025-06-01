@@ -64,7 +64,7 @@ export function Pricing() {
           <h2 className="text-3xl font-bold tracking-tight  sm:text-4xl">
             Simple, Transparent Pricing
           </h2>
-          <p className="mt-6 text-lg leading-8 text-gray-600">
+          <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400">
             Start free and scale as your team grows
           </p>
         </div>
@@ -90,7 +90,9 @@ export function Pricing() {
                 <div className="mt-4">
                   <span className="text-4xl font-bold ">{plan.price}</span>
                   {plan.price !== "Custom" && (
-                    <span className="text-gray-600">/month</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      /month
+                    </span>
                   )}
                 </div>
               </CardHeader>
@@ -99,7 +101,9 @@ export function Pricing() {
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-center">
                       <Check className="h-4 w-4 text-green-600 mr-3" />
-                      <span className="text-gray-600">{feature}</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        {feature}
+                      </span>
                     </li>
                   ))}
                 </ul>

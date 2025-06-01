@@ -426,7 +426,7 @@ export default function TeamDetailPage() {
             ) : (
               <>
                 <h1 className="text-3xl font-bold ">{team.name}</h1>
-                <p className="text-gray-600">
+                <p className="text-gray-600 dark:text-gray-400">
                   {team.description || "No description"}
                 </p>
               </>
@@ -471,7 +471,9 @@ export default function TeamDetailPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{team.memberCount}</div>
-            <p className="text-xs text-gray-600">Active members</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              Active members
+            </p>
           </CardContent>
         </Card>
 
@@ -484,7 +486,9 @@ export default function TeamDetailPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{team.stats.activeSprints}</div>
-            <p className="text-xs text-gray-600">Currently running</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              Currently running
+            </p>
           </CardContent>
         </Card>
 
@@ -499,7 +503,9 @@ export default function TeamDetailPage() {
             <div className="text-2xl font-bold">
               {team.stats.completedTasksThisMonth}
             </div>
-            <p className="text-xs text-gray-600">Completed tasks</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              Completed tasks
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -544,7 +550,9 @@ export default function TeamDetailPage() {
                       </Avatar>
                       <div>
                         <p className="font-medium">{member.name}</p>
-                        <p className="text-sm text-gray-600">{member.email}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {member.email}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -593,7 +601,7 @@ export default function TeamDetailPage() {
                       <div className="flex items-center justify-between mb-2">
                         <div>
                           <h4 className="font-medium">{sprint.name}</h4>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
                             {new Date(sprint.startDate).toLocaleDateString()} -{" "}
                             {new Date(sprint.endDate).toLocaleDateString()}
                           </p>
@@ -614,7 +622,7 @@ export default function TeamDetailPage() {
                           <span>{sprint.progress}%</span>
                         </div>
                         <Progress value={sprint.progress} className="h-2" />
-                        <div className="flex justify-between text-xs text-gray-500">
+                        <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
                           <span>
                             {sprint.completedTasks}/{sprint.taskCount} tasks
                             completed
@@ -626,7 +634,9 @@ export default function TeamDetailPage() {
                 ) : (
                   <div className="text-center py-8">
                     <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">No sprints created yet</p>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      No sprints created yet
+                    </p>
                     <Link href="/dashboard/sprint-planning">
                       <Button variant="outline" size="sm" className="mt-2">
                         Create First Sprint
@@ -660,7 +670,7 @@ export default function TeamDetailPage() {
 
               <div className="space-y-2">
                 <Label>Created</Label>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   {new Date(team.createdAt).toLocaleDateString()}
                 </p>
               </div>
@@ -668,14 +678,14 @@ export default function TeamDetailPage() {
               <div className="space-y-2">
                 <Label>Team ID</Label>
                 <Input value={team.id} disabled />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-600 dark:text-gray-400">
                   Use this ID for integrations and API access
                 </p>
               </div>
 
               <div className="pt-4 border-t">
                 <h4 className="font-medium text-red-900 mb-2">Danger Zone</h4>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                   Once you delete a team, there is no going back. Please be
                   certain.
                 </p>

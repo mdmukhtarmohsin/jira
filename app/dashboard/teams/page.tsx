@@ -72,7 +72,7 @@ export default function TeamsPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold ">Teams</h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Manage your organization's teams and members
           </p>
         </div>
@@ -105,7 +105,7 @@ export default function TeamsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold ">Teams</h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Manage your organization's teams and members
           </p>
         </div>
@@ -128,7 +128,7 @@ export default function TeamsPage() {
               <Users className="h-8 w-8 text-blue-600" />
             </div>
             <h3 className="text-xl font-medium  mb-2">No Teams Yet</h3>
-            <p className="text-gray-600 text-center mb-6 max-w-md">
+            <p className="text-gray-600 dark:text-gray-400 text-center mb-6 max-w-md">
               Create your first team to start organizing projects and
               collaborating with team members.
             </p>
@@ -166,7 +166,9 @@ export default function TeamsPage() {
                       <Users className="h-4 w-4 text-blue-600" />
                     </div>
                     <p className="text-2xl font-bold ">{team.memberCount}</p>
-                    <p className="text-xs text-gray-600">Members</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      Members
+                    </p>
                   </div>
                   <div>
                     <div className="flex items-center justify-center mb-1">
@@ -175,7 +177,9 @@ export default function TeamsPage() {
                     <p className="text-2xl font-bold ">
                       {team.activeSprintCount}
                     </p>
-                    <p className="text-xs text-gray-600">Active Sprints</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      Active Sprints
+                    </p>
                   </div>
                   <div>
                     <div className="flex items-center justify-center mb-1">
@@ -184,7 +188,9 @@ export default function TeamsPage() {
                     <p className="text-2xl font-bold ">
                       {team.completedTasksThisMonth}
                     </p>
-                    <p className="text-xs text-gray-600">Tasks Done</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      Tasks Done
+                    </p>
                   </div>
                 </div>
 
@@ -193,7 +199,7 @@ export default function TeamsPage() {
                     <h4 className="font-medium  mb-2">Current Sprint</h4>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
                           {team.currentSprint}
                         </span>
                         <Badge
@@ -235,7 +241,7 @@ export default function TeamsPage() {
                     ))}
                     {team.memberCount > 4 && (
                       <div className="h-8 w-8 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center">
-                        <span className="text-xs text-gray-600">
+                        <span className="text-xs text-gray-600 dark:text-gray-400">
                           +{team.memberCount - 4}
                         </span>
                       </div>
@@ -262,10 +268,10 @@ export default function TeamsPage() {
           <Card className="border-dashed border-2 border-gray-300 hover:border-gray-400 transition-colors">
             <CardContent className="flex flex-col items-center justify-center py-12">
               <div className="rounded-full bg-gray-100 p-3 mb-4">
-                <Plus className="h-6 w-6 text-gray-600" />
+                <Plus className="h-6 w-6 text-gray-600 dark:text-gray-400" />
               </div>
               <h3 className="text-lg font-medium  mb-2">Create New Team</h3>
-              <p className="text-gray-600 text-center mb-4">
+              <p className="text-gray-600 dark:text-gray-400 text-center mb-4">
                 Start collaborating with a new team. Add members and begin your
                 first sprint.
               </p>

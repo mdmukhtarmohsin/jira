@@ -149,7 +149,7 @@ export function EnhancedTaskDetailsModal({
   };
 
   const statusColors = {
-    todo: "text-gray-600 bg-gray-50 border-gray-200",
+    todo: "text-gray-600 dark:text-gray-400 bg-gray-50 border-gray-200",
     in_progress: "text-blue-600 bg-blue-50 border-blue-200",
     review: "text-purple-600 bg-purple-50 border-purple-200",
     done: "text-green-600 bg-green-50 border-green-200",
@@ -469,7 +469,7 @@ export function EnhancedTaskDetailsModal({
                         task.title
                       )}
                     </DialogTitle>
-                    <div className="flex items-center space-x-2 text-xs text-gray-500">
+                    <div className="flex items-center space-x-2 text-xs text-gray-600 dark:text-gray-400">
                       <span className="flex items-center space-x-1">
                         <span className="w-1 h-1 rounded-full bg-blue-500"></span>
                         <span className="capitalize font-medium">
@@ -627,7 +627,7 @@ export function EnhancedTaskDetailsModal({
                                   <span className="font-medium  text-xs">
                                     {comment.user.full_name}
                                   </span>
-                                  <time className="text-xs text-gray-500">
+                                  <time className="text-xs text-gray-600 dark:text-gray-400">
                                     {formatDate(comment.created_at)}
                                   </time>
                                 </div>
@@ -644,7 +644,7 @@ export function EnhancedTaskDetailsModal({
                 ) : (
                   <div className="text-center py-6">
                     <MessageSquare className="w-6 h-6 text-gray-300 mx-auto mb-1" />
-                    <p className="text-gray-500 font-medium text-xs">
+                    <p className="text-gray-600 dark:text-gray-400 font-medium text-xs">
                       No comments yet
                     </p>
                     <p className="text-gray-400 text-xs">
@@ -824,7 +824,9 @@ export function EnhancedTaskDetailsModal({
                             <p className="font-medium  text-xs">
                               {task.assignee.name}
                             </p>
-                            <p className="text-xs text-gray-500">Assigned</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                              Assigned
+                            </p>
                           </div>
                         </>
                       ) : (
@@ -833,7 +835,7 @@ export function EnhancedTaskDetailsModal({
                             <User className="w-2.5 h-2.5 text-gray-400" />
                           </div>
                           <div>
-                            <p className="font-medium text-gray-500 text-xs">
+                            <p className="font-medium text-gray-600 dark:text-gray-400 text-xs">
                               Unassigned
                             </p>
                             <p className="text-xs text-gray-400">No assignee</p>
@@ -907,7 +909,7 @@ export function EnhancedTaskDetailsModal({
                             : "No due date"}
                         </p>
                         {task.due_date && (
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
                             {new Date(task.due_date) < new Date()
                               ? "Overdue"
                               : "Upcoming"}
@@ -929,7 +931,7 @@ export function EnhancedTaskDetailsModal({
                   </Label>
                   <div className="flex items-center space-x-1">
                     <Clock className="w-2.5 h-2.5 text-gray-400" />
-                    <span className="text-xs text-gray-600">
+                    <span className="text-xs text-gray-600 dark:text-gray-400">
                       {formatDate(task.created_at)}
                     </span>
                   </div>
@@ -942,7 +944,7 @@ export function EnhancedTaskDetailsModal({
                     </Label>
                     <div className="flex items-center space-x-1">
                       <Activity className="w-2.5 h-2.5 text-gray-400" />
-                      <span className="text-xs text-gray-600">
+                      <span className="text-xs text-gray-600 dark:text-gray-400">
                         {formatDate(task.updated_at)}
                       </span>
                     </div>

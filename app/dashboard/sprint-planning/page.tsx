@@ -50,7 +50,7 @@ export default function SprintPlanningPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold ">Sprint Planning</h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400">
               Plan and manage your sprints with AI-powered insights
             </p>
           </div>
@@ -59,7 +59,7 @@ export default function SprintPlanningPage() {
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
               Loading sprint planning data...
             </p>
           </div>
@@ -73,7 +73,7 @@ export default function SprintPlanningPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold ">Sprint Planning</h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Plan and manage your sprints with AI-powered insights
           </p>
         </div>
@@ -100,7 +100,7 @@ export default function SprintPlanningPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold ">Sprint Planning</h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Create a team first to start planning sprints
           </p>
         </div>
@@ -111,7 +111,7 @@ export default function SprintPlanningPage() {
               <Users className="h-8 w-8 text-blue-600" />
             </div>
             <h3 className="text-xl font-medium  mb-2">No Teams Found</h3>
-            <p className="text-gray-600 text-center mb-6 max-w-md">
+            <p className="text-gray-600 dark:text-gray-400 text-center mb-6 max-w-md">
               You need to create or join a team before you can plan sprints.
             </p>
             <Button onClick={() => router.push("/dashboard/teams")}>
@@ -128,7 +128,7 @@ export default function SprintPlanningPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold ">Sprint Planning</h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Plan and manage your sprints with AI-powered insights
           </p>
         </div>

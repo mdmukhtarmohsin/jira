@@ -49,7 +49,7 @@ const typeColors = {
 };
 
 const statusColors = {
-  todo: "bg-gray-50 dark:bg-gray-950/30 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800",
+  todo: "bg-gray-50 dark:bg-gray-950/30 text-gray-600 dark:text-gray-400 dark:text-gray-400 border-gray-200 dark:border-gray-800",
   in_progress:
     "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800",
   review:

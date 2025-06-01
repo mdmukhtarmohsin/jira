@@ -1,77 +1,87 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { Github, Mail } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { signUp } from "@/lib/auth"
-import { toast } from "@/hooks/use-toast"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Github, Mail } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { signUp } from "@/lib/auth";
+import { toast } from "@/hooks/use-toast";
 
 export default function SignupPage() {
-  const router = useRouter()
+  const router = useRouter();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
     organizationName: "",
-  })
-  const [isLoading, setIsLoading] = useState(false)
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Error",
         description: "Passwords do not match",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     const { data, error } = await signUp(
       formData.email,
       formData.password,
       formData.fullName,
-      formData.organizationName,
-    )
+      formData.organizationName
+    );
 
     if (error) {
       toast({
         title: "Error",
         description: error.message,
         variant: "destructive",
-      })
+      });
     } else {
       toast({
         title: "Success",
-        description: "Account created successfully! Please check your email to verify your account.",
-      })
-      router.push("/auth/login")
+        description:
+          "Account created successfully! Please check your email to verify your account.",
+      });
+      router.push("/auth/login");
     }
 
-    setIsLoading(false)
-  }
+    setIsLoading(false);
+  };
 
-  const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, [field]: e.target.value }))
-  }
+  const handleChange =
+    (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+    };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Create account</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">
+            Create account
+          </CardTitle>
           <CardDescription className="text-center">
             Enter your details to create your account and organization
           </CardDescription>
@@ -129,7 +139,11 @@ export default function SignupPage() {
                 required
               />
             </div>
-            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700"
+              disabled={isLoading}
+            >
               {isLoading ? "Creating account..." : "Create account"}
             </Button>
           </form>
@@ -139,7 +153,9 @@ export default function SignupPage() {
               <Separator />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-gray-500">Or continue with</span>
+              <span className="bg-white px-2 text-gray-600 dark:text-gray-400">
+                Or continue with
+              </span>
             </div>
           </div>
 
@@ -163,5 +179,5 @@ export default function SignupPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

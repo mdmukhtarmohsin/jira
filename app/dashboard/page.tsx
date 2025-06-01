@@ -60,7 +60,7 @@ export default function DashboardPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold ">Dashboard</h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Welcome back! Here's what's happening with your projects.
           </p>
         </div>
@@ -96,7 +96,7 @@ export default function DashboardPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold ">Dashboard</h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Welcome! Let's get you started with your first project.
           </p>
         </div>
@@ -107,7 +107,7 @@ export default function DashboardPage() {
               <Plus className="h-8 w-8 text-blue-600" />
             </div>
             <h3 className="text-xl font-medium  mb-2">No Projects Yet</h3>
-            <p className="text-gray-600 text-center mb-6 max-w-md">
+            <p className="text-gray-600 dark:text-gray-400 text-center mb-6 max-w-md">
               Create your first team and start managing projects with AI-powered
               sprint planning.
             </p>
@@ -164,7 +164,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold ">Dashboard</h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Welcome back! Here's what's happening with your projects.
           </p>
         </div>
@@ -185,7 +185,9 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-gray-600">{stat.change}</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                {stat.change}
+              </p>
             </CardContent>
           </Card>
         ))}
@@ -209,7 +211,7 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">{sprint.name}</p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         {sprint.team_name}
                       </p>
                     </div>
@@ -221,13 +223,13 @@ export default function DashboardPage() {
                       >
                         {sprint.status}
                       </Badge>
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
                         {sprint.progress}%
                       </span>
                     </div>
                   </div>
                   <Progress value={sprint.progress} className="h-2" />
-                  <div className="flex justify-between text-xs text-gray-500">
+                  <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
                     <span>
                       {sprint.completed_tasks}/{sprint.task_count} tasks
                     </span>
@@ -240,7 +242,9 @@ export default function DashboardPage() {
             ) : (
               <div className="text-center py-8">
                 <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No active sprints</p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  No active sprints
+                </p>
                 <Link href="/dashboard/sprint-planning">
                   <Button variant="outline" size="sm" className="mt-2">
                     Create Sprint

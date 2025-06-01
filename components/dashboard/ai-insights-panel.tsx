@@ -645,7 +645,7 @@ export function AiInsightsPanel() {
       case "info":
         return <Target className="h-5 w-5 text-blue-500" />;
       default:
-        return <Brain className="h-5 w-5 text-gray-500" />;
+        return <Brain className="h-5 w-5 text-gray-600 " />;
     }
   };
 
@@ -746,13 +746,13 @@ export function AiInsightsPanel() {
                       <p className="text-sm">{alert.warning}</p>
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <span className="text-gray-600">Original: </span>
+                          <span className="text-gray-600 ">Original: </span>
                           <span className="font-medium">
                             {alert.originalStoryPoints} pts
                           </span>
                         </div>
                         <div>
-                          <span className="text-gray-600">Current: </span>
+                          <span className="text-gray-600 ">Current: </span>
                           <span className="font-medium">
                             {alert.currentStoryPoints} pts
                           </span>
@@ -760,7 +760,7 @@ export function AiInsightsPanel() {
                       </div>
                       {alert.addedTasks.length > 0 && (
                         <div>
-                          <p className="text-sm text-gray-600 mb-1">
+                          <p className="text-sm text-gray-600  mb-1">
                             Recently added tasks:
                           </p>
                           <ul className="text-xs space-y-1">
@@ -782,7 +782,7 @@ export function AiInsightsPanel() {
                 <h3 className="text-lg font-medium mb-2">
                   No Scope Creep Detected
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-gray-600 ">
                   Your active sprints are maintaining healthy scope boundaries.
                 </p>
               </div>
@@ -810,7 +810,7 @@ export function AiInsightsPanel() {
                             <div className="flex items-center justify-between">
                               <div>
                                 <strong>{member.memberName}</strong>
-                                <p className="text-sm text-gray-600">
+                                <p className="text-sm text-gray-600 ">
                                   {member.reason}
                                 </p>
                               </div>
@@ -818,7 +818,7 @@ export function AiInsightsPanel() {
                                 <div className="text-sm font-medium">
                                   {member.taskCount} tasks
                                 </div>
-                                <div className="text-sm text-gray-600">
+                                <div className="text-sm text-gray-600 ">
                                   {member.totalStoryPoints} pts
                                 </div>
                               </div>
@@ -865,7 +865,7 @@ export function AiInsightsPanel() {
                       {riskHeatmap.recommendations.map((rec, idx) => (
                         <li key={idx} className="flex items-start space-x-2">
                           <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
-                          <span className="text-sm text-gray-700">{rec}</span>
+                          <span className="text-sm ">{rec}</span>
                         </li>
                       ))}
                     </ul>
@@ -880,7 +880,7 @@ export function AiInsightsPanel() {
                       <h3 className="text-lg font-medium mb-2">
                         Team Health Looks Good
                       </h3>
-                      <p className="text-gray-600">
+                      <p className="text-gray-600 ">
                         No significant risks detected in current workload
                         distribution.
                       </p>
@@ -893,7 +893,7 @@ export function AiInsightsPanel() {
                 <h3 className="text-lg font-medium mb-2">
                   No Risk Data Available
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-gray-600 ">
                   Risk analysis will appear here when you have active tasks and
                   team members.
                 </p>
@@ -920,7 +920,7 @@ export function AiInsightsPanel() {
                   </CardHeader>
                   <CardContent>
                     <div className="prose prose-sm max-w-none">
-                      <div className="whitespace-pre-wrap text-sm text-gray-700">
+                      <div className="whitespace-pre-wrap text-sm ">
                         {retro.content}
                       </div>
                     </div>
@@ -933,7 +933,7 @@ export function AiInsightsPanel() {
                 <h3 className="text-lg font-medium mb-2">
                   No Retrospectives Yet
                 </h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-gray-600  mb-4">
                   Retrospectives will be automatically generated when sprints
                   are completed.
                 </p>

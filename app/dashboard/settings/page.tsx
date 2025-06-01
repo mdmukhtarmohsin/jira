@@ -112,7 +112,7 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold ">Settings</h1>
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-gray-400">
           Manage your account and organization preferences
         </p>
       </div>
@@ -178,7 +178,7 @@ export default function SettingsPage() {
                 </Avatar>
                 <div>
                   <Button variant="outline">Change Avatar</Button>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     JPG, GIF or PNG. 1MB max.
                   </p>
                 </div>
@@ -204,7 +204,7 @@ export default function SettingsPage() {
                   value={user?.email || ""}
                   disabled
                 />
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Email cannot be changed from this interface
                 </p>
               </div>
@@ -212,14 +212,14 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label htmlFor="userId">User ID</Label>
                 <Input id="userId" value={user?.id || ""} disabled />
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Your unique user identifier
                 </p>
               </div>
 
               <div className="space-y-2">
                 <Label>Account Created</Label>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   {user?.created_at
                     ? new Date(user.created_at).toLocaleDateString()
                     : "Unknown"}
@@ -269,7 +269,9 @@ export default function SettingsPage() {
                             user?.email?.split("@")[0] ||
                             "User"}
                         </p>
-                        <p className="text-sm text-gray-600">{user?.email}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {user?.email}
+                        </p>
                       </div>
                     </div>
                     <Badge>Admin</Badge>
@@ -298,7 +300,7 @@ export default function SettingsPage() {
                     <Label htmlFor="emailNotifications">
                       Email Notifications
                     </Label>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Receive email updates about your tasks and mentions
                     </p>
                   </div>
@@ -321,7 +323,7 @@ export default function SettingsPage() {
                     <Label htmlFor="pushNotifications">
                       Push Notifications
                     </Label>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Get instant notifications in your browser
                     </p>
                   </div>
@@ -342,7 +344,7 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label htmlFor="weeklyDigest">Weekly Digest</Label>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Receive a weekly summary of your team's progress
                     </p>
                   </div>
@@ -363,7 +365,7 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label htmlFor="mentionAlerts">Mention Alerts</Label>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Get notified when someone mentions you
                     </p>
                   </div>
@@ -409,7 +411,7 @@ export default function SettingsPage() {
 
                 <div>
                   <Label>Two-Factor Authentication</Label>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     Add an extra layer of security to your account
                   </p>
                   <Button variant="outline" className="mt-2">
@@ -421,14 +423,14 @@ export default function SettingsPage() {
 
                 <div>
                   <Label>Active Sessions</Label>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     Manage your active login sessions
                   </p>
                   <div className="mt-2 space-y-2">
                     <div className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
                         <p className="font-medium">Current Session</p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
                           Last active:{" "}
                           {user?.last_sign_in_at
                             ? new Date(user.last_sign_in_at).toLocaleString()
@@ -476,7 +478,7 @@ export default function SettingsPage() {
 
                 <div>
                   <Label>Density</Label>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     Choose how compact you want the interface to be
                   </p>
                   <div className="grid grid-cols-3 gap-4 mt-2">
@@ -507,7 +509,7 @@ export default function SettingsPage() {
                     <Label htmlFor="autoSprintPlanning">
                       Auto Sprint Planning
                     </Label>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Let AI suggest optimal sprint plans based on team capacity
                     </p>
                   </div>
@@ -528,7 +530,7 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label htmlFor="riskDetection">Risk Detection</Label>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Automatically identify overloaded team members and
                       blockers
                     </p>
@@ -552,7 +554,7 @@ export default function SettingsPage() {
                     <Label htmlFor="scopeCreepWarnings">
                       Scope Creep Warnings
                     </Label>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Get alerts when sprint scope increases beyond limits
                     </p>
                   </div>
@@ -575,7 +577,7 @@ export default function SettingsPage() {
                     <Label htmlFor="autoRetrospectives">
                       Auto Retrospectives
                     </Label>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Generate retrospective reports automatically at sprint end
                     </p>
                   </div>

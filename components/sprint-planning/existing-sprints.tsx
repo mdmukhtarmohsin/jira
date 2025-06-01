@@ -254,7 +254,9 @@ export function ExistingSprints({
                       <Target className="h-4 w-4 text-blue-600" />
                     </div>
                     <p className="text-2xl font-bold ">{sprint.task_count}</p>
-                    <p className="text-xs text-gray-600">Total Tasks</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      Total Tasks
+                    </p>
                   </div>
                   <div>
                     <div className="flex items-center justify-center mb-1">
@@ -263,14 +265,18 @@ export function ExistingSprints({
                     <p className="text-2xl font-bold ">
                       {getDaysRemaining(sprint.end_date)}
                     </p>
-                    <p className="text-xs text-gray-600">Days Left</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      Days Left
+                    </p>
                   </div>
                   <div>
                     <div className="flex items-center justify-center mb-1">
                       <Users className="h-4 w-4 text-purple-600" />
                     </div>
                     <p className="text-2xl font-bold ">{sprint.progress}%</p>
-                    <p className="text-xs text-gray-600">Complete</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      Complete
+                    </p>
                   </div>
                 </div>
 
@@ -284,7 +290,7 @@ export function ExistingSprints({
                   <Progress value={sprint.progress} className="h-2" />
                 </div>
 
-                <div className="flex justify-between text-sm text-gray-600">
+                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
                   <span>
                     {new Date(sprint.start_date).toLocaleDateString()}
                   </span>
@@ -311,7 +317,7 @@ export function ExistingSprints({
               <Calendar className="h-8 w-8 text-blue-600" />
             </div>
             <h3 className="text-xl font-medium  mb-2">No Sprints Found</h3>
-            <p className="text-gray-600 text-center mb-6 max-w-md">
+            <p className="text-gray-600 dark:text-gray-400 text-center mb-6 max-w-md">
               Get started by creating your first sprint. You can use our AI
               planner to help you organize tasks.
             </p>
