@@ -33,7 +33,7 @@ import {
 import { CreateTaskModal } from "@/components/modals/create-task-modal";
 import { useKanbanData } from "@/hooks/use-kanban-data";
 import { useEpicsAndLabels } from "@/hooks/use-epics-and-labels";
-import { TaskDetailsModal } from "@/components/modals/task-details-modal";
+import { EnhancedTaskDetailsModal } from "@/components/modals/enhanced-task-details-modal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -610,10 +610,12 @@ export default function BacklogPage() {
         selectedTeamId={selectedTeamId}
       />
 
-      <TaskDetailsModal
+      <EnhancedTaskDetailsModal
         task={selectedTask}
         open={!!selectedTask}
         onOpenChange={() => setSelectedTask(null)}
+        onTaskUpdated={refetch}
+        onTaskDeleted={refetch}
       />
     </div>
   );

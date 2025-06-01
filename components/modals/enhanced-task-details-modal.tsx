@@ -118,12 +118,15 @@ export function EnhancedTaskDetailsModal({
   onTaskDeleted,
 }: EnhancedTaskDetailsModalProps) {
   const { user } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [sprints, setSprints] = useState<Sprint[]>([]);
+
+  // Individual edit states for each field
+  const [editingField, setEditingField] = useState<string | null>(null);
+
   const [editData, setEditData] = useState({
     title: "",
     description: "",
@@ -405,12 +408,101 @@ export function EnhancedTaskDetailsModal({
         }
       }
 
-      setIsEditing(false);
+      setEditingField(null);
       onTaskUpdated?.();
 
       toast({
         title: "Task updated",
         description: "Task has been updated successfully.",
+      });
+    } catch (error) {
+      console.error("Error updating task:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update task. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFieldSave = async (field: string) => {
+    if (!task) return;
+
+    setLoading(true);
+
+    try {
+      let updateData: any = {
+        updated_at: new Date().toISOString(),
+      };
+
+      switch (field) {
+        case "title":
+          if (!editData.title.trim()) return;
+          updateData.title = editData.title.trim();
+          break;
+        case "description":
+          updateData.description = editData.description.trim() || null;
+          break;
+        case "type":
+          updateData.type = editData.type;
+          break;
+        case "priority":
+          updateData.priority = editData.priority;
+          break;
+        case "status":
+          updateData.status = editData.status;
+          break;
+        case "story_points":
+          updateData.story_points = editData.story_points
+            ? Number.parseInt(editData.story_points)
+            : null;
+          break;
+        case "assignee_id":
+          updateData.assignee_id = editData.assignee_id || null;
+          break;
+        case "due_date":
+          updateData.due_date = editData.due_date || null;
+          break;
+        case "sprint_id":
+          // Handle sprint assignment separately
+          if (editData.sprint_id !== task.sprint?.id) {
+            if (task.sprint?.id) {
+              await supabase
+                .from("sprint_tasks")
+                .delete()
+                .eq("task_id", task.id)
+                .eq("sprint_id", task.sprint.id);
+            }
+
+            if (editData.sprint_id) {
+              await supabase
+                .from("sprint_tasks")
+                .insert([{ sprint_id: editData.sprint_id, task_id: task.id }]);
+            }
+          }
+          break;
+      }
+
+      if (field !== "sprint_id") {
+        const { error: updateError } = await supabase
+          .from("tasks")
+          .update(updateData)
+          .eq("id", task.id);
+
+        if (updateError) throw updateError;
+      }
+
+      setEditingField(null);
+      onTaskUpdated?.();
+
+      toast({
+        title: "Task updated",
+        description: `${field.replace(
+          "_",
+          " "
+        )} has been updated successfully.`,
       });
     } catch (error) {
       console.error("Error updating task:", error);
@@ -442,7 +534,7 @@ export function EnhancedTaskDetailsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0 bg-white">
+      <DialogContent className="max-w-4xl max-h-[90vh] p-0 ">
         <div className="flex h-full max-h-[85vh]">
           {/* Main Content */}
           <div className="flex-1 p-4 overflow-y-auto">
@@ -454,19 +546,45 @@ export function EnhancedTaskDetailsModal({
                   </div>
                   <div className="flex-1">
                     <DialogTitle className="text-lg font-bold  mb-1">
-                      {isEditing ? (
-                        <Input
-                          value={editData.title}
-                          onChange={(e) =>
-                            setEditData((prev) => ({
-                              ...prev,
-                              title: e.target.value,
-                            }))
-                          }
-                          className="text-lg font-bold border-0 px-0 focus:ring-0 bg-transparent h-7"
-                        />
+                      {editingField === "title" ? (
+                        <div className="space-y-2">
+                          <Input
+                            value={editData.title}
+                            onChange={(e) =>
+                              setEditData((prev) => ({
+                                ...prev,
+                                title: e.target.value,
+                              }))
+                            }
+                            className="text-lg font-bold border-0 px-0 focus:ring-0 bg-transparent h-7"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleFieldSave("title")}
+                              disabled={loading}
+                              className="bg-blue-600 hover:bg-blue-700 text-white h-6 text-xs"
+                            >
+                              <Save className="w-3 h-3 mr-1" />
+                              Save
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setEditingField(null)}
+                              className="h-6 text-xs"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
                       ) : (
-                        task.title
+                        <div
+                          className="cursor-pointer hover:bg-gray-50 rounded p-1 -m-1"
+                          onClick={() => setEditingField("title")}
+                        >
+                          {task.title}
+                        </div>
                       )}
                     </DialogTitle>
                     <div className="flex items-center space-x-2 text-xs text-gray-600 dark:text-gray-400">
@@ -485,18 +603,26 @@ export function EnhancedTaskDetailsModal({
                 </div>
 
                 <div className="flex items-center space-x-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsEditing(!isEditing)}
-                    className="h-7 w-7 rounded-lg hover:bg-gray-100"
-                  >
-                    {isEditing ? (
+                  {editingField && editingField !== "title" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditingField(null)}
+                      className="h-7 w-7 rounded-lg hover:bg-gray-100"
+                    >
                       <X className="w-3 h-3" />
-                    ) : (
+                    </Button>
+                  )}
+                  {!editingField && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditingField("title")}
+                      className="h-7 w-7 rounded-lg hover:bg-gray-100"
+                    >
                       <Edit3 className="w-3 h-3" />
-                    )}
-                  </Button>
+                    </Button>
+                  )}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -532,25 +658,59 @@ export function EnhancedTaskDetailsModal({
                 <Label className="text-xs font-semibold  flex items-center space-x-1.5">
                   <div className="w-0.5 h-3 bg-blue-500 rounded-full"></div>
                   <span>Description</span>
+                  {editingField !== "description" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditingField("description")}
+                      className="h-4 w-4 p-0 ml-auto opacity-0 group-hover:opacity-100"
+                    >
+                      <Edit3 className="w-3 h-3" />
+                    </Button>
+                  )}
                 </Label>
-                <div>
-                  {isEditing ? (
-                    <Textarea
-                      value={editData.description}
-                      onChange={(e) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          description: e.target.value,
-                        }))
-                      }
-                      placeholder="Add a description..."
-                      className="min-h-[60px] border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 text-xs"
-                    />
+                <div className="group">
+                  {editingField === "description" ? (
+                    <div className="space-y-2">
+                      <Textarea
+                        value={editData.description}
+                        onChange={(e) =>
+                          setEditData((prev) => ({
+                            ...prev,
+                            description: e.target.value,
+                          }))
+                        }
+                        placeholder="Add a description..."
+                        className="min-h-[60px] border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 text-xs"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleFieldSave("description")}
+                          disabled={loading}
+                          className="bg-blue-600 hover:bg-blue-700 text-white h-6 text-xs"
+                        >
+                          <Save className="w-3 h-3 mr-1" />
+                          Save
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingField(null)}
+                          className="h-6 text-xs"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
                   ) : (
-                    <div className="text-xs text-gray-700 bg-gray-50/50 rounded-lg p-2 min-h-[60px] border border-gray-100">
+                    <div
+                      className="text-xs text-gray-700 bg-gray-50/50 rounded-lg p-2 min-h-[60px] border border-gray-100 cursor-pointer hover:bg-gray-100/50"
+                      onClick={() => setEditingField("description")}
+                    >
                       {task.description || (
                         <span className="text-gray-400 italic">
-                          No description provided
+                          Click to add description
                         </span>
                       )}
                     </div>
@@ -654,12 +814,12 @@ export function EnhancedTaskDetailsModal({
                 )}
               </div>
 
-              {isEditing && (
+              {editingField === "title" && (
                 <div className="flex justify-end space-x-2 pt-3 border-t border-gray-200">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setIsEditing(false)}
+                    onClick={() => setEditingField(null)}
                     className="h-7 text-xs"
                   >
                     Cancel
@@ -687,34 +847,95 @@ export function EnhancedTaskDetailsModal({
                   Status
                 </Label>
                 <div>
-                  {isEditing ? (
-                    <Select
-                      value={editData.status}
-                      onValueChange={(value) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          status: value as any,
-                        }))
-                      }
-                    >
-                      <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="todo">To Do</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="review">In Review</SelectItem>
-                        <SelectItem value="done">Done</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  {editingField === "status" ? (
+                    <div className="space-y-2">
+                      <Select
+                        value={editData.status}
+                        onValueChange={async (value) => {
+                          setEditData((prev) => ({
+                            ...prev,
+                            status: value as any,
+                          }));
+                          // Auto-save the status change
+                          await handleFieldSave("status");
+                        }}
+                      >
+                        <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="todo">To Do</SelectItem>
+                          <SelectItem value="in_progress">
+                            In Progress
+                          </SelectItem>
+                          <SelectItem value="review">In Review</SelectItem>
+                          <SelectItem value="done">Done</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   ) : (
-                    <Badge
-                      className={`${
-                        statusColors[task.status]
-                      } border px-2 py-0.5 text-xs font-medium`}
+                    <div
+                      className="cursor-pointer hover:bg-gray-50 rounded p-1 -m-1"
+                      onClick={() => setEditingField("status")}
                     >
-                      {statusLabels[task.status]}
-                    </Badge>
+                      <Badge
+                        className={`${
+                          statusColors[task.status]
+                        } border px-2 py-0.5 text-xs font-medium`}
+                      >
+                        {statusLabels[task.status]}
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Sprint */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold  uppercase tracking-wider">
+                  Sprint
+                </Label>
+                <div>
+                  {editingField === "sprint_id" ? (
+                    <div className="space-y-2">
+                      <Select
+                        value={editData.sprint_id || "backlog"}
+                        onValueChange={async (value) => {
+                          setEditData((prev) => ({
+                            ...prev,
+                            sprint_id: value === "backlog" ? "" : value,
+                          }));
+                          // Auto-save the sprint change
+                          await handleFieldSave("sprint_id");
+                        }}
+                      >
+                        <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="backlog">Backlog</SelectItem>
+                          {sprints.map((sprint) => (
+                            <SelectItem key={sprint.id} value={sprint.id}>
+                              {sprint.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ) : (
+                    <div
+                      className="cursor-pointer hover:bg-gray-50 rounded p-1 -m-1"
+                      onClick={() => setEditingField("sprint_id")}
+                    >
+                      <div className="flex items-center space-x-1.5">
+                        <div className="w-5 h-5 rounded-lg bg-purple-100 flex items-center justify-center">
+                          <GitBranch className="w-2.5 h-2.5 text-purple-600" />
+                        </div>
+                        <span className="font-medium  text-xs">
+                          {task.sprint?.name || "Backlog"}
+                        </span>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
@@ -725,49 +946,58 @@ export function EnhancedTaskDetailsModal({
                   Priority
                 </Label>
                 <div>
-                  {isEditing ? (
-                    <Select
-                      value={editData.priority}
-                      onValueChange={(value) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          priority: value as any,
-                        }))
-                      }
-                    >
-                      <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">
-                          <div className="flex items-center">
-                            <Flag className="w-3 h-3 mr-1.5 text-green-600" />
-                            Low
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="medium">
-                          <div className="flex items-center">
-                            <Flag className="w-3 h-3 mr-1.5 text-orange-600" />
-                            Medium
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="high">
-                          <div className="flex items-center">
-                            <Flag className="w-3 h-3 mr-1.5 text-red-600" />
-                            High
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                  {editingField === "priority" ? (
+                    <div className="space-y-2">
+                      <Select
+                        value={editData.priority}
+                        onValueChange={async (value) => {
+                          setEditData((prev) => ({
+                            ...prev,
+                            priority: value as any,
+                          }));
+                          // Auto-save the priority change
+                          await handleFieldSave("priority");
+                        }}
+                      >
+                        <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">
+                            <div className="flex items-center">
+                              <Flag className="w-3 h-3 mr-1.5 text-green-600" />
+                              Low
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="medium">
+                            <div className="flex items-center">
+                              <Flag className="w-3 h-3 mr-1.5 text-orange-600" />
+                              Medium
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="high">
+                            <div className="flex items-center">
+                              <Flag className="w-3 h-3 mr-1.5 text-red-600" />
+                              High
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   ) : (
-                    <Badge
-                      className={`${
-                        priorityColors[task.priority]
-                      } border px-2 py-0.5 text-xs font-medium capitalize`}
+                    <div
+                      className="cursor-pointer hover:bg-gray-50 rounded p-1 -m-1"
+                      onClick={() => setEditingField("priority")}
                     >
-                      <Flag className="w-2.5 h-2.5 mr-1" />
-                      {task.priority}
-                    </Badge>
+                      <Badge
+                        className={`${
+                          priorityColors[task.priority]
+                        } border px-2 py-0.5 text-xs font-medium capitalize`}
+                      >
+                        <Flag className="w-2.5 h-2.5 mr-1" />
+                        {task.priority}
+                      </Badge>
+                    </div>
                   )}
                 </div>
               </div>
@@ -778,70 +1008,83 @@ export function EnhancedTaskDetailsModal({
                   Assignee
                 </Label>
                 <div>
-                  {isEditing ? (
-                    <Select
-                      value={editData.assignee_id || "unassigned"}
-                      onValueChange={(value) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          assignee_id: value === "unassigned" ? "" : value,
-                        }))
-                      }
-                    >
-                      <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs">
-                        <SelectValue placeholder="Unassigned" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="unassigned">Unassigned</SelectItem>
-                        {teamMembers.map((member) => (
-                          <SelectItem key={member.id} value={member.id}>
-                            <div className="flex items-center">
-                              <Avatar className="w-4 h-4 mr-1.5">
-                                <AvatarImage src={member.avatar || undefined} />
-                                <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                                  {member.initials}
-                                </AvatarFallback>
-                              </Avatar>
-                              {member.name}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  {editingField === "assignee_id" ? (
+                    <div className="space-y-2">
+                      <Select
+                        value={editData.assignee_id || "unassigned"}
+                        onValueChange={async (value) => {
+                          setEditData((prev) => ({
+                            ...prev,
+                            assignee_id: value === "unassigned" ? "" : value,
+                          }));
+                          // Auto-save the assignee change
+                          await handleFieldSave("assignee_id");
+                        }}
+                      >
+                        <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs">
+                          <SelectValue placeholder="Unassigned" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="unassigned">Unassigned</SelectItem>
+                          {teamMembers.map((member) => (
+                            <SelectItem key={member.id} value={member.id}>
+                              <div className="flex items-center">
+                                <Avatar className="w-4 h-4 mr-1.5">
+                                  <AvatarImage
+                                    src={member.avatar || undefined}
+                                  />
+                                  <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                                    {member.initials}
+                                  </AvatarFallback>
+                                </Avatar>
+                                {member.name}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   ) : (
-                    <div className="flex items-center space-x-1.5">
-                      {task.assignee ? (
-                        <>
-                          <Avatar className="w-5 h-5 ring-1 ring-gray-200">
-                            <AvatarImage
-                              src={task.assignee.avatar || undefined}
-                            />
-                            <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                              {task.assignee.initials}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium  text-xs">
-                              {task.assignee.name}
-                            </p>
-                            <p className="text-xs text-gray-600 dark:text-gray-400">
-                              Assigned
-                            </p>
+                    <div
+                      className="cursor-pointer hover:bg-gray-50 rounded p-1 -m-1"
+                      onClick={() => setEditingField("assignee_id")}
+                    >
+                      <div className="flex items-center space-x-1.5">
+                        {task.assignee ? (
+                          <>
+                            <Avatar className="w-5 h-5 ring-1 ring-gray-200">
+                              <AvatarImage
+                                src={task.assignee.avatar || undefined}
+                              />
+                              <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                                {task.assignee.initials}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium  text-xs">
+                                {task.assignee.name}
+                              </p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">
+                                Assigned
+                              </p>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex items-center space-x-1.5">
+                            <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center">
+                              <User className="w-2.5 h-2.5 text-gray-400" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-600 dark:text-gray-400 text-xs">
+                                Unassigned
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                Click to assign
+                              </p>
+                            </div>
                           </div>
-                        </>
-                      ) : (
-                        <div className="flex items-center space-x-1.5">
-                          <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center">
-                            <User className="w-2.5 h-2.5 text-gray-400" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-600 dark:text-gray-400 text-xs">
-                              Unassigned
-                            </p>
-                            <p className="text-xs text-gray-400">No assignee</p>
-                          </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -853,27 +1096,34 @@ export function EnhancedTaskDetailsModal({
                   Story Points
                 </Label>
                 <div>
-                  {isEditing ? (
-                    <Input
-                      type="number"
-                      value={editData.story_points}
-                      onChange={(e) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          story_points: e.target.value,
-                        }))
-                      }
-                      placeholder="0"
-                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs"
-                    />
+                  {editingField === "story_points" ? (
+                    <div className="space-y-2">
+                      <Input
+                        type="number"
+                        value={editData.story_points}
+                        onChange={(e) =>
+                          setEditData((prev) => ({
+                            ...prev,
+                            story_points: e.target.value,
+                          }))
+                        }
+                        placeholder="0"
+                        className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs"
+                      />
+                    </div>
                   ) : (
-                    <div className="flex items-center space-x-1.5">
-                      <div className="w-5 h-5 rounded-lg bg-blue-100 flex items-center justify-center">
-                        <Target className="w-2.5 h-2.5 text-blue-600" />
+                    <div
+                      className="cursor-pointer hover:bg-gray-50 rounded p-1 -m-1"
+                      onClick={() => setEditingField("story_points")}
+                    >
+                      <div className="flex items-center space-x-1.5">
+                        <div className="w-5 h-5 rounded-lg bg-blue-100 flex items-center justify-center">
+                          <Target className="w-2.5 h-2.5 text-blue-600" />
+                        </div>
+                        <span className="font-medium  text-xs">
+                          {task.story_points || "Not estimated"}
+                        </span>
                       </div>
-                      <span className="font-medium  text-xs">
-                        {task.story_points || "Not estimated"}
-                      </span>
                     </div>
                   )}
                 </div>
@@ -885,36 +1135,43 @@ export function EnhancedTaskDetailsModal({
                   Due Date
                 </Label>
                 <div>
-                  {isEditing ? (
-                    <Input
-                      type="date"
-                      value={editData.due_date}
-                      onChange={(e) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          due_date: e.target.value,
-                        }))
-                      }
-                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs"
-                    />
+                  {editingField === "due_date" ? (
+                    <div className="space-y-2">
+                      <Input
+                        type="date"
+                        value={editData.due_date}
+                        onChange={(e) =>
+                          setEditData((prev) => ({
+                            ...prev,
+                            due_date: e.target.value,
+                          }))
+                        }
+                        className="border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs"
+                      />
+                    </div>
                   ) : (
-                    <div className="flex items-center space-x-1.5">
-                      <div className="w-5 h-5 rounded-lg bg-orange-100 flex items-center justify-center">
-                        <Calendar className="w-2.5 h-2.5 text-orange-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium  text-xs">
-                          {task.due_date
-                            ? new Date(task.due_date).toLocaleDateString()
-                            : "No due date"}
-                        </p>
-                        {task.due_date && (
-                          <p className="text-xs text-gray-600 dark:text-gray-400">
-                            {new Date(task.due_date) < new Date()
-                              ? "Overdue"
-                              : "Upcoming"}
+                    <div
+                      className="cursor-pointer hover:bg-gray-50 rounded p-1 -m-1"
+                      onClick={() => setEditingField("due_date")}
+                    >
+                      <div className="flex items-center space-x-1.5">
+                        <div className="w-5 h-5 rounded-lg bg-orange-100 flex items-center justify-center">
+                          <Calendar className="w-2.5 h-2.5 text-orange-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium  text-xs">
+                            {task.due_date
+                              ? new Date(task.due_date).toLocaleDateString()
+                              : "No due date"}
                           </p>
-                        )}
+                          {task.due_date && (
+                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                              {new Date(task.due_date) < new Date()
+                                ? "Overdue"
+                                : "Upcoming"}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}
