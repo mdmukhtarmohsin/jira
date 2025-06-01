@@ -121,7 +121,7 @@ export function useKanbanData() {
       let tasksData = [];
 
       if (sprintFilter === "backlog") {
-        // Get tasks not in any sprint
+        // Get tasks not in any sprint FOR THIS TEAM
         const { data: backlogTasks, error: backlogError } = await supabase
           .from("tasks")
           .select(
@@ -143,10 +143,19 @@ export function useKanbanData() {
 
         if (backlogError) throw new Error("Could not fetch backlog tasks");
 
-        // Filter out tasks that are in sprints
+        // Filter out tasks that are in sprints FOR THIS TEAM ONLY
         const { data: sprintTaskIds, error: sprintTaskError } = await supabase
           .from("sprint_tasks")
-          .select("task_id");
+          .select(
+            `
+            task_id,
+            sprints!inner(
+              id,
+              team_id
+            )
+          `
+          )
+          .eq("sprints.team_id", teamId);
 
         if (sprintTaskError) throw new Error("Could not fetch sprint tasks");
 
