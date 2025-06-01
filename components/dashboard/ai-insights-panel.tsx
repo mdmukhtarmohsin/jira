@@ -13,6 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   AlertTriangle,
   TrendingUp,
   Users,
@@ -68,6 +75,8 @@ interface RetrospectiveData {
   sprintName: string;
   content: string;
   generatedAt: string;
+  teamName: string;
+  status: string;
 }
 
 interface Task {
@@ -88,6 +97,7 @@ interface Sprint {
   start_date: string;
   end_date: string;
   status: string;
+  team_name?: string;
 }
 
 interface UserProfile {
@@ -122,6 +132,9 @@ export function AiInsightsPanel() {
   );
   const [riskHeatmap, setRiskHeatmap] = useState<RiskHeatmapData | null>(null);
   const [retrospectives, setRetrospectives] = useState<RetrospectiveData[]>([]);
+  const [selectedSprintId, setSelectedSprintId] = useState<string>("");
+  const [selectedSprintRetro, setSelectedSprintRetro] =
+    useState<RetrospectiveData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("scope-creep");
   const [insights, setInsights] = useState<AIInsight[]>([]);
@@ -132,6 +145,15 @@ export function AiInsightsPanel() {
       fetchAiInsights();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (selectedSprintId) {
+      const selectedRetro = retrospectives.find(
+        (r) => r.sprintId === selectedSprintId
+      );
+      setSelectedSprintRetro(selectedRetro || null);
+    }
+  }, [selectedSprintId, retrospectives]);
 
   const fetchAiInsights = async () => {
     setLoading(true);
@@ -146,6 +168,72 @@ export function AiInsightsPanel() {
       console.error("Error fetching AI insights:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRetrospectives = async () => {
+    try {
+      // Get user's organization
+      const { data: orgMember } = await supabase
+        .from("organization_members")
+        .select("organization_id")
+        .eq("user_id", user?.id)
+        .single();
+
+      if (!orgMember) return;
+
+      const { data: teams } = await supabase
+        .from("teams")
+        .select("id, name")
+        .eq("organization_id", orgMember.organization_id);
+
+      if (!teams) return;
+
+      const teamIds = teams.map((t) => t.id);
+
+      // Get all retrospectives with sprint and team information
+      const { data: retrospectiveData } = await supabase
+        .from("retrospectives")
+        .select(
+          `
+          sprint_id,
+          content,
+          created_at,
+          sprints!inner(
+            id,
+            name,
+            status,
+            start_date,
+            end_date,
+            team_id,
+            teams!inner(name)
+          )
+        `
+        )
+        .in("sprints.team_id", teamIds)
+        .order("created_at", { ascending: false });
+
+      if (retrospectiveData) {
+        const retros: RetrospectiveData[] = retrospectiveData.map(
+          (retro: any) => ({
+            sprintId: retro.sprint_id,
+            sprintName: retro.sprints.name,
+            content: retro.content,
+            generatedAt: retro.created_at,
+            teamName: retro.sprints.teams.name,
+            status: retro.sprints.status,
+          })
+        );
+
+        setRetrospectives(retros);
+
+        // Auto-select the most recent retrospective if none selected
+        if (!selectedSprintId && retros.length > 0) {
+          setSelectedSprintId(retros[0].sprintId);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching retrospectives:", error);
     }
   };
 
@@ -324,72 +412,6 @@ export function AiInsightsPanel() {
       }
     } catch (error) {
       console.error("Error fetching risk heatmap:", error);
-    }
-  };
-
-  const fetchRetrospectives = async () => {
-    try {
-      // Get completed sprints from the last 30 days
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      const { data: orgMember } = await supabase
-        .from("organization_members")
-        .select("organization_id")
-        .eq("user_id", user?.id)
-        .single();
-
-      if (!orgMember) return;
-
-      const { data: teams } = await supabase
-        .from("teams")
-        .select("id")
-        .eq("organization_id", orgMember.organization_id);
-
-      if (!teams) return;
-
-      const teamIds = teams.map((t) => t.id);
-
-      const { data: completedSprints } = await supabase
-        .from("sprints")
-        .select("id, name, end_date")
-        .in("team_id", teamIds)
-        .eq("status", "completed")
-        .gte("end_date", thirtyDaysAgo.toISOString())
-        .order("end_date", { ascending: false })
-        .limit(5);
-
-      if (!completedSprints) return;
-
-      // Check if retrospectives already exist
-      const { data: existingRetros } = await supabase
-        .from("retrospectives")
-        .select("sprint_id, content, created_at")
-        .in(
-          "sprint_id",
-          completedSprints.map((s) => s.id)
-        );
-
-      const retros: RetrospectiveData[] = [];
-
-      for (const sprint of completedSprints) {
-        const existingRetro = existingRetros?.find(
-          (r) => r.sprint_id === sprint.id
-        );
-
-        if (existingRetro) {
-          retros.push({
-            sprintId: sprint.id,
-            sprintName: sprint.name,
-            content: existingRetro.content,
-            generatedAt: existingRetro.created_at,
-          });
-        }
-      }
-
-      setRetrospectives(retros);
-    } catch (error) {
-      console.error("Error fetching retrospectives:", error);
     }
   };
 
@@ -904,35 +926,94 @@ export function AiInsightsPanel() {
 
           <TabsContent value="retrospectives" className="space-y-4">
             {retrospectives.length > 0 ? (
-              retrospectives.map((retro) => (
-                <Card
-                  key={retro.sprintId}
-                  className="border-l-4 border-l-blue-500"
-                >
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">
-                        {retro.sprintName}
-                      </CardTitle>
-                      <Badge variant="outline">
-                        {new Date(retro.generatedAt).toLocaleDateString()}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <Markdown content={retro.content} className="text-sm" />
-                  </CardContent>
-                </Card>
-              ))
+              <>
+                <div className="mb-6">
+                  <Select
+                    value={selectedSprintId}
+                    onValueChange={setSelectedSprintId}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a sprint retrospective" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {retrospectives.map((retro) => (
+                        <SelectItem key={retro.sprintId} value={retro.sprintId}>
+                          <div className="flex items-center justify-between w-full min-w-0">
+                            <div className="flex flex-col items-start min-w-0">
+                              <span className="font-medium truncate">
+                                {retro.sprintName}
+                              </span>
+                              <div className="flex items-center space-x-2 text-xs text-gray-500">
+                                <span>{retro.teamName}</span>
+                                <span>•</span>
+                                <span>
+                                  {new Date(
+                                    retro.generatedAt
+                                  ).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                            <Badge
+                              variant={
+                                retro.status === "completed"
+                                  ? "default"
+                                  : "secondary"
+                              }
+                              className="text-xs ml-2 shrink-0"
+                            >
+                              {retro.status}
+                            </Badge>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {selectedSprintRetro && (
+                  <Card className="border-l-4 border-l-purple-500">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-lg flex items-center">
+                            <FileText className="mr-2 h-5 w-5 text-purple-600" />
+                            {selectedSprintRetro.sprintName}
+                          </CardTitle>
+                          <CardDescription className="flex items-center space-x-2 mt-1">
+                            <span>{selectedSprintRetro.teamName}</span>
+                            <span>•</span>
+                            <span>
+                              Generated{" "}
+                              {new Date(
+                                selectedSprintRetro.generatedAt
+                              ).toLocaleDateString()}
+                            </span>
+                          </CardDescription>
+                        </div>
+                        <Badge variant="outline" className="shrink-0">
+                          {selectedSprintRetro.status}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <Markdown
+                        content={selectedSprintRetro.content}
+                        className="text-sm prose prose-sm max-w-none"
+                      />
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             ) : (
-              <div className="text-center py-8">
-                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">
-                  No Retrospectives Yet
+              <div className="text-center py-12">
+                <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No Retrospectives Available
                 </h3>
-                <p className="text-gray-600  mb-4">
-                  Retrospectives will be automatically generated when sprints
-                  are completed.
+                <p className="text-gray-500 text-sm max-w-md mx-auto">
+                  Retrospectives will appear here once they are generated for
+                  completed sprints. Check back after completing a sprint to
+                  view AI-powered insights and team feedback.
                 </p>
               </div>
             )}
