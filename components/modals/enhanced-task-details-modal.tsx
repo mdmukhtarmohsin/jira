@@ -43,10 +43,12 @@ import {
   MoreHorizontal,
   Activity,
   Flag,
-  Eye,
   Link,
   GitBranch,
   Bookmark,
+  BookOpen,
+  CheckSquare,
+  Bug,
 } from "lucide-react";
 import { supabase } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
@@ -75,6 +77,16 @@ interface Task {
     name: string;
     status: string;
   };
+  epic?: {
+    id: string;
+    title: string;
+    status: string;
+  };
+  labels?: Array<{
+    id: string;
+    name: string;
+    color: string;
+  }>;
 }
 
 interface Comment {
@@ -102,6 +114,19 @@ interface Sprint {
   status: string;
 }
 
+interface Epic {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+}
+
+interface Label {
+  id: string;
+  name: string;
+  color: string;
+}
+
 interface EnhancedTaskDetailsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -123,6 +148,29 @@ export function EnhancedTaskDetailsModal({
   const [newComment, setNewComment] = useState("");
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [sprints, setSprints] = useState<Sprint[]>([]);
+  const [epics, setEpics] = useState<Epic[]>([]);
+  const [labels, setLabels] = useState<Label[]>([]);
+
+  // Local state for current sprint to update UI immediately
+  const [currentSprint, setCurrentSprint] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
+  // Local state for current epic
+  const [currentEpic, setCurrentEpic] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+
+  // Local state for current labels
+  const [currentLabels, setCurrentLabels] = useState<
+    Array<{
+      id: string;
+      name: string;
+      color: string;
+    }>
+  >([]);
 
   // Individual edit states for each field
   const [editingField, setEditingField] = useState<string | null>(null);
@@ -137,12 +185,16 @@ export function EnhancedTaskDetailsModal({
     assignee_id: "",
     due_date: "",
     sprint_id: "",
+    epic_id: "",
+    label_ids: [] as string[],
   });
 
+  const [isFieldSaving, setIsFieldSaving] = useState<string | null>(null);
+
   const typeIcons = {
-    story: "📖",
-    bug: "🐛",
-    task: "✓",
+    bug: <Bug className="w-4 h-4" />,
+    story: <BookOpen className="w-4 h-4" />,
+    task: <CheckSquare className="w-4 h-4" />,
   };
 
   const priorityColors = {
@@ -167,6 +219,13 @@ export function EnhancedTaskDetailsModal({
 
   useEffect(() => {
     if (task && open) {
+      setCurrentSprint(task.sprint || null);
+      setCurrentEpic(
+        task.epic ? { id: task.epic.id, title: task.epic.title } : null
+      );
+      setCurrentLabels(task.labels || []);
+
+      // Initialize edit data from task
       setEditData({
         title: task.title,
         description: task.description || "",
@@ -177,7 +236,10 @@ export function EnhancedTaskDetailsModal({
         assignee_id: task.assignee_id || "",
         due_date: task.due_date || "",
         sprint_id: task.sprint?.id || "",
+        epic_id: task.epic?.id || "",
+        label_ids: task.labels?.map((label) => label.id) || [],
       });
+
       fetchTaskData();
       fetchComments();
     }
@@ -233,8 +295,126 @@ export function EnhancedTaskDetailsModal({
         .order("created_at", { ascending: false });
 
       setSprints(sprintsData || []);
+
+      // Fetch epics and labels with detailed error handling
+      try {
+        // Get current user
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) {
+          console.error("No authenticated user found");
+          return;
+        }
+
+        console.log(
+          "Fetching epics for team:",
+          taskData.team_id,
+          "and user:",
+          user.id
+        );
+
+        // Check team membership first
+        const { data: teamMembership, error: membershipError } = await supabase
+          .from("team_members")
+          .select("*")
+          .eq("team_id", taskData.team_id)
+          .eq("user_id", user.id)
+          .single();
+
+        if (membershipError) {
+          console.error("Team membership check error:", membershipError);
+        } else {
+          console.log("Team membership found:", teamMembership);
+        }
+
+        // Fetch epics with detailed error handling
+        console.log("Starting epic fetch...");
+        const { data: epicsData, error: epicsError } = await supabase
+          .from("epics")
+          .select("id, title, description, status")
+          .eq("team_id", taskData.team_id)
+          .order("created_at", { ascending: false });
+
+        if (epicsError) {
+          console.error("Error fetching epics:", epicsError);
+          toast({
+            title: "Error",
+            description: "Failed to fetch epics: " + epicsError.message,
+            variant: "destructive",
+          });
+        } else {
+          console.log("Epics fetched successfully:", epicsData);
+          setEpics(epicsData || []);
+        }
+
+        // Fetch labels with detailed error handling
+        console.log("Starting labels fetch...");
+        const { data: labelsData, error: labelsError } = await supabase
+          .from("labels")
+          .select("id, name, color")
+          .eq("team_id", taskData.team_id)
+          .order("created_at", { ascending: false });
+
+        if (labelsError) {
+          console.error("Error fetching labels:", labelsError);
+          toast({
+            title: "Error",
+            description: "Failed to fetch labels: " + labelsError.message,
+            variant: "destructive",
+          });
+        } else {
+          console.log("Labels fetched successfully:", labelsData);
+          setLabels(labelsData || []);
+        }
+      } catch (error) {
+        console.error("Unexpected error in fetchEpicsAndLabels:", error);
+        toast({
+          title: "Error",
+          description: "An unexpected error occurred while fetching data",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       console.error("Error fetching task data:", error);
+    }
+  };
+
+  const fetchUpdatedTaskData = async () => {
+    if (!task) return;
+
+    try {
+      // Fetch updated task with sprint information
+      const { data: updatedTask, error } = await supabase
+        .from("tasks")
+        .select(
+          `
+          *,
+          sprint:sprint_tasks(
+            sprint:sprints(
+              id,
+              name,
+              status
+            )
+          )
+        `
+        )
+        .eq("id", task.id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching updated task:", error);
+        return;
+      }
+
+      // Update the task data - this will trigger the parent component to re-render
+      console.log("Fetched updated task data:", updatedTask);
+
+      // Call onTaskUpdated to refresh parent component with new data
+      onTaskUpdated?.();
+    } catch (error) {
+      console.error("Error fetching updated task data:", error);
     }
   };
 
@@ -427,7 +607,13 @@ export function EnhancedTaskDetailsModal({
     }
   };
 
-  const handleFieldSave = async (field: string) => {
+  const handleFieldSave = async (field: string, newValue?: any) => {
+    console.log(
+      "handleFieldSave called with field:",
+      field,
+      "newValue:",
+      newValue
+    );
     if (!task) return;
 
     setLoading(true);
@@ -465,50 +651,268 @@ export function EnhancedTaskDetailsModal({
         case "due_date":
           updateData.due_date = editData.due_date || null;
           break;
+        case "epic_id":
+          // Handle epic assignment
+          const targetEpicId =
+            newValue !== undefined
+              ? newValue === "no_epic"
+                ? ""
+                : newValue
+              : editData.epic_id;
+
+          console.log("Updating epic assignment:", {
+            currentEpicId: task.epic?.id,
+            newEpicId: targetEpicId,
+            taskId: task.id,
+          });
+
+          // Compare current epic ID with new epic ID
+          const currentEpicId = task.epic?.id || null;
+          const newEpicId = targetEpicId || null;
+
+          if (currentEpicId !== newEpicId) {
+            // Update the epic_id field directly in the tasks table
+            console.log("Updating task epic_id to:", newEpicId);
+            const { error: updateError } = await supabase
+              .from("tasks")
+              .update({ epic_id: newEpicId })
+              .eq("id", task.id);
+
+            if (updateError) {
+              console.error("Error updating task epic:", updateError);
+              throw new Error(
+                `Failed to update task epic: ${updateError.message}`
+              );
+            }
+
+            console.log("Epic assignment updated successfully");
+
+            // Update internal state to reflect the change immediately
+            setEditData((prev) => ({
+              ...prev,
+              epic_id: newEpicId || "",
+            }));
+
+            // Update current epic display
+            if (newEpicId) {
+              const selectedEpic = epics.find((e) => e.id === newEpicId);
+              setCurrentEpic(
+                selectedEpic
+                  ? { id: selectedEpic.id, title: selectedEpic.title }
+                  : null
+              );
+            } else {
+              setCurrentEpic(null);
+            }
+
+            setEditingField(null);
+
+            // Fetch updated task data to reflect changes immediately
+            await fetchUpdatedTaskData();
+
+            toast({
+              title: "Epic updated",
+              description: newEpicId
+                ? "Task has been added to the selected epic."
+                : "Task has been removed from epic.",
+            });
+
+            return; // Exit early for epic changes
+          } else {
+            console.log("No epic change detected, skipping update");
+            setEditingField(null);
+            return;
+          }
+        case "labels":
+          // Handle label assignments
+          const targetLabelIds =
+            newValue !== undefined ? newValue : editData.label_ids;
+          const currentLabelIds = task.labels?.map((label) => label.id) || [];
+
+          console.log("Updating label assignments:", {
+            currentLabelIds,
+            newLabelIds: targetLabelIds,
+            taskId: task.id,
+          });
+
+          // Remove all current label assignments
+          if (currentLabelIds.length > 0) {
+            const { error: deleteError } = await supabase
+              .from("task_labels")
+              .delete()
+              .eq("task_id", task.id);
+
+            if (deleteError) {
+              console.error("Error removing task labels:", deleteError);
+              throw new Error(
+                `Failed to remove current labels: ${deleteError.message}`
+              );
+            }
+          }
+
+          // Add new label assignments
+          if (targetLabelIds.length > 0) {
+            const labelAssignments = targetLabelIds.map((labelId: string) => ({
+              task_id: task.id,
+              label_id: labelId,
+            }));
+
+            const { error: insertError } = await supabase
+              .from("task_labels")
+              .insert(labelAssignments);
+
+            if (insertError) {
+              console.error("Error adding task labels:", insertError);
+              throw new Error(
+                `Failed to add new labels: ${insertError.message}`
+              );
+            }
+          }
+
+          console.log("Label assignments updated successfully");
+
+          // Update internal state to reflect the change immediately
+          setEditData((prev) => ({
+            ...prev,
+            label_ids: targetLabelIds,
+          }));
+
+          // Update current labels display
+          const selectedLabels = labels.filter((label) =>
+            targetLabelIds.includes(label.id)
+          );
+          setCurrentLabels(selectedLabels);
+
+          setEditingField(null);
+
+          // Fetch updated task data to reflect changes immediately
+          await fetchUpdatedTaskData();
+
+          toast({
+            title: "Labels updated",
+            description: "Task labels have been updated successfully.",
+          });
+
+          return; // Exit early for label changes
         case "sprint_id":
           // Handle sprint assignment separately
-          if (editData.sprint_id !== task.sprint?.id) {
-            if (task.sprint?.id) {
-              await supabase
+          // Use newValue if provided, otherwise use editData
+          const targetSprintId =
+            newValue !== undefined
+              ? newValue === "backlog"
+                ? ""
+                : newValue
+              : editData.sprint_id;
+
+          console.log("Updating sprint assignment:", {
+            currentSprintId: task.sprint?.id,
+            newSprintId: targetSprintId,
+            taskId: task.id,
+          });
+
+          // Compare current sprint ID with new sprint ID
+          const currentSprintId = task.sprint?.id || null;
+          const newSprintId = targetSprintId || null;
+
+          if (currentSprintId !== newSprintId) {
+            // Remove from current sprint if exists
+            if (currentSprintId) {
+              console.log(
+                "Removing task from current sprint:",
+                currentSprintId
+              );
+              const { error: deleteError } = await supabase
                 .from("sprint_tasks")
                 .delete()
                 .eq("task_id", task.id)
-                .eq("sprint_id", task.sprint.id);
+                .eq("sprint_id", currentSprintId);
+
+              if (deleteError) {
+                console.error("Error removing task from sprint:", deleteError);
+                throw new Error(
+                  `Failed to remove task from current sprint: ${deleteError.message}`
+                );
+              }
             }
 
-            if (editData.sprint_id) {
-              await supabase
+            // Add to new sprint if selected
+            if (newSprintId) {
+              console.log("Adding task to new sprint:", newSprintId);
+              const { error: insertError } = await supabase
                 .from("sprint_tasks")
-                .insert([{ sprint_id: editData.sprint_id, task_id: task.id }]);
+                .insert([{ sprint_id: newSprintId, task_id: task.id }]);
+
+              if (insertError) {
+                console.error("Error adding task to sprint:", insertError);
+                throw new Error(
+                  `Failed to add task to new sprint: ${insertError.message}`
+                );
+              }
             }
+
+            console.log("Sprint assignment updated successfully");
+
+            // Update internal state to reflect the change immediately
+            setEditData((prev) => ({
+              ...prev,
+              sprint_id: newSprintId || "",
+            }));
+
+            // Update current sprint display
+            if (newSprintId) {
+              const selectedSprint = sprints.find((s) => s.id === newSprintId);
+              setCurrentSprint(
+                selectedSprint
+                  ? { id: selectedSprint.id, name: selectedSprint.name }
+                  : null
+              );
+            } else {
+              setCurrentSprint(null);
+            }
+
+            setEditingField(null);
+
+            // Fetch updated task data to reflect changes immediately
+            await fetchUpdatedTaskData();
+
+            toast({
+              title: "Sprint updated",
+              description: newSprintId
+                ? "Task has been moved to the selected sprint."
+                : "Task has been moved to backlog.",
+            });
+
+            return; // Exit early for sprint changes
+          } else {
+            console.log("No sprint change detected, skipping update");
+            setEditingField(null);
+            return;
           }
-          break;
       }
 
-      if (field !== "sprint_id") {
-        const { error: updateError } = await supabase
-          .from("tasks")
-          .update(updateData)
-          .eq("id", task.id);
+      // Update the task for all other fields (not sprint_id, epic_id, or labels)
+      const { error: updateError } = await supabase
+        .from("tasks")
+        .update(updateData)
+        .eq("id", task.id);
 
-        if (updateError) throw updateError;
-      }
+      if (updateError) throw updateError;
 
       setEditingField(null);
       onTaskUpdated?.();
 
       toast({
         title: "Task updated",
-        description: `${field.replace(
-          "_",
-          " "
-        )} has been updated successfully.`,
+        description: "Task has been updated successfully.",
       });
     } catch (error) {
       console.error("Error updating task:", error);
       toast({
         title: "Error",
-        description: "Failed to update task. Please try again.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to update task. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -911,6 +1315,209 @@ export function EnhancedTaskDetailsModal({
                 </div>
               </div>
 
+              {/* Epic */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold dark:text-neutral-200 uppercase tracking-wider">
+                  Epic
+                </Label>
+                <div>
+                  {editingField === "epic_id" ? (
+                    <div className="space-y-2">
+                      <Select
+                        value={editData.epic_id || "no_epic"}
+                        onValueChange={(value) => {
+                          console.log("Epic select value changed:", {
+                            oldValue: editData.epic_id,
+                            newValue: value,
+                            currentTask: task?.id,
+                          });
+                          setEditData((prev) => ({
+                            ...prev,
+                            epic_id: value === "no_epic" ? "" : value,
+                          }));
+                          // Auto-save the epic change
+                          console.log(
+                            "About to call handleFieldSave for epic_id"
+                          );
+                          handleFieldSave("epic_id", value);
+                        }}
+                      >
+                        <SelectTrigger className="border-neutral-200 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="dark:bg-neutral-800 dark:border-neutral-600">
+                          <SelectItem
+                            value="no_epic"
+                            className="dark:text-neutral-300 dark:hover:bg-neutral-700"
+                          >
+                            No Epic
+                          </SelectItem>
+                          {epics.map((epic) => (
+                            <SelectItem
+                              key={epic.id}
+                              value={epic.id}
+                              className="dark:text-neutral-300 dark:hover:bg-neutral-700"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <div className="w-3 h-3 rounded bg-purple-500"></div>
+                                <span>{epic.title}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ) : (
+                    <div
+                      className="cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded p-1 -m-1"
+                      onClick={() => {
+                        console.log(
+                          "Epic field clicked, setting editing field to epic_id"
+                        );
+                        setEditingField("epic_id");
+                      }}
+                    >
+                      <div className="flex items-center space-x-1.5">
+                        {currentEpic ? (
+                          <>
+                            <div className="w-5 h-5 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+                              <div className="w-2.5 h-2.5 rounded bg-purple-500"></div>
+                            </div>
+                            <span className="font-medium dark:text-neutral-200 text-xs">
+                              {currentEpic.title}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <div className="w-5 h-5 rounded-lg bg-neutral-100 dark:bg-neutral-700 flex items-center justify-center">
+                              <Target className="w-2.5 h-2.5 text-neutral-400 dark:text-neutral-500" />
+                            </div>
+                            <span className="font-medium text-neutral-600 dark:text-neutral-400 text-xs">
+                              No Epic
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Labels */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold dark:text-neutral-200 uppercase tracking-wider">
+                  Labels
+                </Label>
+                <div>
+                  {editingField === "labels" ? (
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap gap-1">
+                        {labels.map((label) => {
+                          const isSelected = editData.label_ids.includes(
+                            label.id
+                          );
+                          return (
+                            <button
+                              key={label.id}
+                              onClick={() => {
+                                const newLabelIds = isSelected
+                                  ? editData.label_ids.filter(
+                                      (id) => id !== label.id
+                                    )
+                                  : [...editData.label_ids, label.id];
+                                setEditData((prev) => ({
+                                  ...prev,
+                                  label_ids: newLabelIds,
+                                }));
+                              }}
+                              className={`inline-flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium border transition-all ${
+                                isSelected
+                                  ? "border-neutral-300 dark:border-neutral-500"
+                                  : "border-neutral-200 dark:border-neutral-600 opacity-60 hover:opacity-100"
+                              }`}
+                              style={{
+                                backgroundColor: isSelected
+                                  ? `${label.color}20`
+                                  : "transparent",
+                                color: label.color,
+                              }}
+                            >
+                              <div
+                                className="w-2 h-2 rounded-full"
+                                style={{ backgroundColor: label.color }}
+                              ></div>
+                              <span>{label.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleFieldSave("labels")}
+                          disabled={loading}
+                          className="bg-blue-600 hover:bg-blue-700 text-white h-6 text-xs"
+                        >
+                          <Save className="w-3 h-3 mr-1" />
+                          Save
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingField(null)}
+                          className="h-6 text-xs dark:border-neutral-600 dark:text-neutral-300 dark:hover:bg-neutral-700"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className="cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded p-1 -m-1"
+                      onClick={() => {
+                        console.log(
+                          "Labels field clicked, setting editing field to labels"
+                        );
+                        setEditingField("labels");
+                      }}
+                    >
+                      <div className="flex items-center space-x-1.5">
+                        <div className="w-5 h-5 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
+                          <Tag className="w-2.5 h-2.5 text-indigo-600 dark:text-indigo-400" />
+                        </div>
+                        <div className="flex-1">
+                          {currentLabels.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {currentLabels.map((label) => (
+                                <span
+                                  key={label.id}
+                                  className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-xs font-medium"
+                                  style={{
+                                    backgroundColor: `${label.color}20`,
+                                    color: label.color,
+                                    border: `1px solid ${label.color}40`,
+                                  }}
+                                >
+                                  <div
+                                    className="w-1.5 h-1.5 rounded-full"
+                                    style={{ backgroundColor: label.color }}
+                                  ></div>
+                                  <span>{label.name}</span>
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="font-medium text-neutral-600 dark:text-neutral-400 text-xs">
+                              No labels
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Sprint */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold dark:text-neutral-200 uppercase tracking-wider">
@@ -921,13 +1528,21 @@ export function EnhancedTaskDetailsModal({
                     <div className="space-y-2">
                       <Select
                         value={editData.sprint_id || "backlog"}
-                        onValueChange={async (value) => {
+                        onValueChange={(value) => {
+                          console.log("Sprint select value changed:", {
+                            oldValue: editData.sprint_id,
+                            newValue: value,
+                            currentTask: task?.id,
+                          });
                           setEditData((prev) => ({
                             ...prev,
                             sprint_id: value === "backlog" ? "" : value,
                           }));
                           // Auto-save the sprint change
-                          await handleFieldSave("sprint_id");
+                          console.log(
+                            "About to call handleFieldSave for sprint_id"
+                          );
+                          handleFieldSave("sprint_id", value);
                         }}
                       >
                         <SelectTrigger className="border-neutral-200 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs">
@@ -955,14 +1570,19 @@ export function EnhancedTaskDetailsModal({
                   ) : (
                     <div
                       className="cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded p-1 -m-1"
-                      onClick={() => setEditingField("sprint_id")}
+                      onClick={() => {
+                        console.log(
+                          "Sprint field clicked, setting editing field to sprint_id"
+                        );
+                        setEditingField("sprint_id");
+                      }}
                     >
                       <div className="flex items-center space-x-1.5">
                         <div className="w-5 h-5 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
                           <GitBranch className="w-2.5 h-2.5 text-purple-600 dark:text-purple-400" />
                         </div>
                         <span className="font-medium dark:text-neutral-200 text-xs">
-                          {task.sprint?.name || "Backlog"}
+                          {currentSprint?.name || "Backlog"}
                         </span>
                       </div>
                     </div>
@@ -1157,7 +1777,33 @@ export function EnhancedTaskDetailsModal({
                         }
                         placeholder="0"
                         className="border-neutral-200 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleFieldSave("story_points");
+                          } else if (e.key === "Escape") {
+                            setEditingField(null);
+                          }
+                        }}
                       />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleFieldSave("story_points")}
+                          disabled={loading}
+                          className="bg-blue-600 hover:bg-blue-700 text-white h-6 text-xs"
+                        >
+                          <Save className="w-3 h-3 mr-1" />
+                          Save
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingField(null)}
+                          className="h-6 text-xs dark:border-neutral-600 dark:text-neutral-300 dark:hover:bg-neutral-700"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <div
@@ -1195,7 +1841,33 @@ export function EnhancedTaskDetailsModal({
                           }))
                         }
                         className="border-neutral-200 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white focus:border-blue-500 focus:ring-blue-500/20 h-7 text-xs"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleFieldSave("due_date");
+                          } else if (e.key === "Escape") {
+                            setEditingField(null);
+                          }
+                        }}
                       />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleFieldSave("due_date")}
+                          disabled={loading}
+                          className="bg-blue-600 hover:bg-blue-700 text-white h-6 text-xs"
+                        >
+                          <Save className="w-3 h-3 mr-1" />
+                          Save
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingField(null)}
+                          className="h-6 text-xs dark:border-neutral-600 dark:text-neutral-300 dark:hover:bg-neutral-700"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <div
