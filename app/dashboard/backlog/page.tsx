@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,9 +19,16 @@ import {
   MoreHorizontal,
   RefreshCw,
   AlertTriangle,
-  Calendar,
-  User,
-  FolderPlus,
+  ChevronDown,
+  ChevronRight,
+  BookOpen,
+  Bug,
+  CheckSquare,
+  Circle,
+  ArrowUp,
+  ArrowDown,
+  Minus,
+  Settings,
 } from "lucide-react";
 import { CreateTaskModal } from "@/components/modals/create-task-modal";
 import { useKanbanData } from "@/hooks/use-kanban-data";
@@ -33,28 +40,39 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+
+const priorityIcons = {
+  high: ArrowUp,
+  medium: Minus,
+  low: ArrowDown,
+};
 
 const priorityColors = {
-  high: "bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800",
-  medium:
-    "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800",
-  low: "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
+  high: "text-red-500",
+  medium: "text-yellow-500",
+  low: "text-green-500",
+};
+
+const typeIcons = {
+  story: BookOpen,
+  bug: Bug,
+  task: CheckSquare,
 };
 
 const typeColors = {
-  story:
-    "bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800",
-  bug: "bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800",
-  task: "bg-slate-50 dark:bg-slate-950/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800",
+  story: "text-blue-500",
+  bug: "text-red-500",
+  task: "text-gray-500",
 };
 
 const statusColors = {
-  todo: "bg-gray-50 dark:bg-gray-950/30 text-gray-600 dark:text-gray-400 dark:text-gray-400 border-gray-200 dark:border-gray-800",
+  todo: "bg-muted text-muted-foreground border-border",
   in_progress:
-    "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+    "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800",
   review:
-    "bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800",
-  done: "bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800",
+    "bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800",
+  done: "bg-green-500/10 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800",
 };
 
 export default function BacklogPage() {
@@ -75,7 +93,11 @@ export default function BacklogPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPriority, setSelectedPriority] = useState("all");
   const [selectedType, setSelectedType] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [collapsedSprints, setCollapsedSprints] = useState<Set<string>>(
+    new Set()
+  );
 
   // Set sprint filter to "backlog" when component mounts or team changes
   useEffect(() => {
@@ -92,81 +114,84 @@ export default function BacklogPage() {
     setSelectedTask(task);
   };
 
-  const handleAddToSprint = async (taskId: string, sprintId: string) => {
-    try {
-      const response = await fetch("/api/sprint-tasks", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          sprint_id: sprintId,
-          task_id: taskId,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to add task to sprint");
-      }
-
-      const sprint = sprints.find((s) => s.id === sprintId);
-      toast({
-        title: "Success",
-        description: `Task added to ${sprint?.name || "sprint"} successfully`,
-      });
-
-      // Refresh the tasks to update the view
-      refetch();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add task to sprint",
-        variant: "destructive",
-      });
+  const toggleSprintCollapse = (sprintId: string) => {
+    const newCollapsed = new Set(collapsedSprints);
+    if (newCollapsed.has(sprintId)) {
+      newCollapsed.delete(sprintId);
+    } else {
+      newCollapsed.add(sprintId);
     }
+    setCollapsedSprints(newCollapsed);
   };
 
-  // Get available sprints for adding tasks (exclude 'all' and 'backlog' options)
-  const availableSprints = sprints.filter(
-    (sprint) => sprint.id !== "all" && sprint.id !== "backlog"
-  );
+  const generateTaskId = (task: any, index: number) => {
+    // Generate a short ID based on team name and index
+    const teamPrefix =
+      teams
+        .find((t) => t.id === selectedTeamId)
+        ?.name?.substring(0, 3)
+        .toUpperCase() || "TSK";
+    return `${teamPrefix}-${(index + 1).toString().padStart(3, "0")}`;
+  };
 
-  // Now we can use tasks directly since the backend is already filtering for backlog
-  const filteredTasks = tasks.filter((task) => {
-    const matchesSearch =
-      task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (task.description &&
-        task.description.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesPriority =
-      selectedPriority === "all" || task.priority === selectedPriority;
-    const matchesType = selectedType === "all" || task.type === selectedType;
+  // Group tasks by sprint or show backlog
+  const groupedTasks = () => {
+    const filteredTasks = tasks.filter((task) => {
+      const matchesSearch =
+        task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (task.description &&
+          task.description.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesPriority =
+        selectedPriority === "all" || task.priority === selectedPriority;
+      const matchesType = selectedType === "all" || task.type === selectedType;
+      const matchesStatus =
+        selectedStatus === "all" || task.status === selectedStatus;
 
-    return matchesSearch && matchesPriority && matchesType;
-  });
+      return matchesSearch && matchesPriority && matchesType && matchesStatus;
+    });
+
+    if (selectedSprintId === "backlog") {
+      return [{ sprint: null, tasks: filteredTasks }];
+    }
+
+    // Group by sprint
+    const sprintGroups = new Map();
+
+    filteredTasks.forEach((task) => {
+      const sprintId = task.sprint?.id || "backlog";
+      const sprintName = task.sprint?.name || "Backlog";
+
+      if (!sprintGroups.has(sprintId)) {
+        sprintGroups.set(sprintId, {
+          sprint: task.sprint || {
+            id: "backlog",
+            name: "Backlog",
+            status: "backlog",
+          },
+          tasks: [],
+        });
+      }
+      sprintGroups.get(sprintId).tasks.push(task);
+    });
+
+    return Array.from(sprintGroups.values());
+  };
 
   if (loading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div>
-            <div className="h-7 bg-muted rounded w-32 animate-pulse"></div>
-            <div className="h-4 bg-muted rounded w-64 mt-1 animate-pulse"></div>
-          </div>
-          <div className="h-9 bg-muted rounded w-32 animate-pulse"></div>
+          <div className="h-8 bg-muted rounded w-48 animate-pulse"></div>
+          <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
         </div>
-
-        <div className="flex items-center gap-3">
-          <div className="h-9 bg-muted rounded w-64 animate-pulse"></div>
-          <div className="h-9 bg-muted rounded w-40 animate-pulse"></div>
-          <div className="h-9 bg-muted rounded w-40 animate-pulse"></div>
+        <div className="flex items-center gap-4">
+          <div className="h-10 bg-muted rounded w-80 animate-pulse"></div>
+          <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
+          <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
         </div>
-
         <div className="space-y-2">
-          {[...Array(5)].map((_, i) => (
-            <div
-              key={i}
-              className="h-16 bg-muted rounded-lg animate-pulse"
-            ></div>
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="h-12 bg-muted rounded animate-pulse"></div>
           ))}
         </div>
       </div>
@@ -175,33 +200,21 @@ export default function BacklogPage() {
 
   if (error) {
     return (
-      <div className="space-y-4">
-        <div className="border-b border-border pb-4">
-          <h1 className="text-2xl font-semibold text-foreground">Backlog</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage and prioritize your upcoming tasks
-          </p>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold">Backlog</h1>
         </div>
-
-        <Card className="border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/30">
+        <Card className="border-red-200 bg-red-50/50">
           <CardContent className="flex flex-col items-center justify-center py-8">
-            <AlertTriangle className="h-10 w-10 text-red-600 dark:text-red-400 mb-3" />
-            <h3 className="text-lg font-medium text-red-900 dark:text-red-200 mb-2">
+            <AlertTriangle className="h-10 w-10 text-red-600 mb-3" />
+            <h3 className="text-lg font-medium text-red-900 mb-2">
               Error Loading Backlog
             </h3>
-            <p className="text-red-700 dark:text-red-300 text-center mb-4 text-sm">
-              {error}
-            </p>
-            <div className="flex gap-2">
-              <Button onClick={refetch} variant="outline" size="sm">
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Try Again
-              </Button>
-              <Button onClick={() => setShowCreateModal(true)} size="sm">
-                <Plus className="mr-2 h-4 w-4" />
-                Create Task
-              </Button>
-            </div>
+            <p className="text-red-700 text-center mb-4 text-sm">{error}</p>
+            <Button onClick={refetch} variant="outline" size="sm">
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Try Again
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -210,22 +223,13 @@ export default function BacklogPage() {
 
   if (teams.length === 0) {
     return (
-      <div className="space-y-4">
-        <div className="border-b border-border pb-4">
-          <h1 className="text-2xl font-semibold text-foreground">Backlog</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Create a team first to start managing tasks
-          </p>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold">Backlog</h1>
         </div>
-
-        <Card className="border-dashed border-2 border-muted">
+        <Card className="border-dashed border-2">
           <CardContent className="flex flex-col items-center justify-center py-10">
-            <div className="rounded-full bg-blue-100 dark:bg-blue-950/30 p-3 mb-4">
-              <Plus className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            </div>
-            <h3 className="text-lg font-medium text-foreground mb-2">
-              No Teams Found
-            </h3>
+            <h3 className="text-lg font-medium mb-2">No Teams Found</h3>
             <p className="text-muted-foreground text-center mb-6 max-w-md text-sm">
               You need to create or join a team before you can manage your
               backlog.
@@ -242,19 +246,37 @@ export default function BacklogPage() {
     );
   }
 
+  const taskGroups = groupedTasks();
+
   return (
-    <div className="space-y-4">
-      {/* Header Section */}
-      <div className="flex items-center justify-between border-b border-border pb-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Backlog</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage and prioritize your upcoming tasks
-          </p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            {teams.map((team, index) => {
+              if (index < 6) {
+                return (
+                  <Avatar key={team.id} className="h-8 w-8">
+                    <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                      {team.name.substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                );
+              }
+              return null;
+            })}
+            {teams.length > 6 && (
+              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                +{teams.length - 6}
+              </div>
+            )}
+          </div>
         </div>
+
         <div className="flex items-center gap-2">
           <Select value={selectedTeamId} onValueChange={setSelectedTeamId}>
-            <SelectTrigger className="w-44 h-9">
+            <SelectTrigger className="w-44">
               <SelectValue placeholder="Select team" />
             </SelectTrigger>
             <SelectContent>
@@ -265,301 +287,237 @@ export default function BacklogPage() {
               ))}
             </SelectContent>
           </Select>
-          <Button
-            onClick={() => setShowCreateModal(true)}
-            size="sm"
-            className="h-9"
-          >
-            <Plus className="mr-1.5 h-4 w-4" />
-            Create Task
+          <Button onClick={() => setShowCreateModal(true)} size="sm">
+            <Plus className="mr-2 h-4 w-4" />
+            Create
+          </Button>
+          <Button variant="ghost" size="sm">
+            <Settings className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="sm">
+            <MoreHorizontal className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      {/* Filters Section */}
-      <div className="flex items-center gap-3 bg-background/50 p-3 rounded-lg border">
-        <div className="relative flex-1 max-w-sm">
+      {/* Filters */}
+      <div className="flex items-center gap-3 p-3 bg-card border rounded-lg">
+        <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search backlog tasks..."
+            placeholder="Search backlog"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 h-9 bg-background"
+            className="pl-10"
           />
         </div>
 
+        <Select value="all">
+          <SelectTrigger className="w-32">
+            <SelectValue placeholder="Version" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Version</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value="all">
+          <SelectTrigger className="w-32">
+            <SelectValue placeholder="Epic" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Epic</SelectItem>
+          </SelectContent>
+        </Select>
+
         <Select value={selectedType} onValueChange={setSelectedType}>
-          <SelectTrigger className="w-36 h-9">
+          <SelectTrigger className="w-32">
             <SelectValue placeholder="Type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="task">Task</SelectItem>
+            <SelectItem value="all">Type</SelectItem>
             <SelectItem value="story">Story</SelectItem>
+            <SelectItem value="task">Task</SelectItem>
             <SelectItem value="bug">Bug</SelectItem>
           </SelectContent>
         </Select>
 
-        <Select value={selectedPriority} onValueChange={setSelectedPriority}>
-          <SelectTrigger className="w-36 h-9">
-            <SelectValue placeholder="Priority" />
+        <Select value="all">
+          <SelectTrigger className="w-32">
+            <SelectValue placeholder="Label" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Priorities</SelectItem>
-            <SelectItem value="high">High</SelectItem>
-            <SelectItem value="medium">Medium</SelectItem>
-            <SelectItem value="low">Low</SelectItem>
+            <SelectItem value="all">Label</SelectItem>
           </SelectContent>
         </Select>
-
-        <Button variant="outline" onClick={refetch} size="sm" className="h-9">
-          <RefreshCw className="h-4 w-4" />
-        </Button>
       </div>
 
-      {/* Tasks Grid */}
+      {/* Task Groups */}
       <div className="space-y-4">
-        {filteredTasks.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filteredTasks.map((task) => (
-              <Card
-                key={task.id}
-                className="group hover:shadow-lg hover:border-primary/30 transition-all duration-200 cursor-pointer border-border bg-card relative overflow-hidden"
-                onClick={() => handleTaskClick(task)}
-              >
-                {/* Priority indicator bar */}
+        {taskGroups.map((group, groupIndex) => {
+          const isBacklog = !group.sprint || group.sprint.id === "backlog";
+          const sprintId = group.sprint?.id || "backlog";
+          const isCollapsed = collapsedSprints.has(sprintId);
+
+          return (
+            <div key={sprintId} className="border rounded-lg bg-card">
+              {!isBacklog && (
                 <div
-                  className={`absolute top-0 left-0 right-0 h-1 ${
-                    task.priority === "high"
-                      ? "bg-red-500"
-                      : task.priority === "medium"
-                      ? "bg-amber-500"
-                      : "bg-emerald-500"
-                  }`}
-                />
-
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Badge
-                        variant="outline"
-                        className={`text-xs border ${
-                          typeColors[task.type]
-                        } font-medium`}
-                      >
-                        {task.type}
-                      </Badge>
-                      <Badge
-                        variant="outline"
-                        className={`text-xs border ${
-                          priorityColors[task.priority]
-                        } font-medium`}
-                      >
-                        {task.priority}
-                      </Badge>
-                      {task.story_points && (
-                        <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md font-medium">
-                          {task.story_points} pts
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Quick Actions */}
-                    <div className="flex items-center gap-1">
-                      {/* Quick Add to Sprint Button */}
-                      {availableSprints.length > 0 && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-50 dark:hover:bg-blue-950/30 text-blue-600 dark:text-blue-400"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                              }}
-                              title="Add to Sprint"
-                            >
-                              <Plus className="h-3 w-3" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-56">
-                            <div className="px-3 py-2 text-xs font-semibold text-foreground border-b border-border">
-                              Add to Sprint
-                            </div>
-                            <div className="p-1">
-                              {availableSprints.map((sprint) => (
-                                <DropdownMenuItem
-                                  key={sprint.id}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleAddToSprint(task.id, sprint.id);
-                                  }}
-                                  className="cursor-pointer flex items-center p-3 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-md"
-                                >
-                                  <FolderPlus className="mr-3 h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                                  <div className="flex-1 min-w-0">
-                                    <div className="font-medium text-sm text-foreground truncate">
-                                      {sprint.name}
-                                    </div>
-                                    <div className="text-xs text-muted-foreground capitalize">
-                                      {sprint.status}
-                                    </div>
-                                  </div>
-                                </DropdownMenuItem>
-                              ))}
-                            </div>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <MoreHorizontal className="h-3 w-3" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56">
-                          {availableSprints.length > 0 ? (
-                            <>
-                              <div className="px-3 py-2 text-xs font-semibold text-foreground border-b border-border">
-                                Add to Sprint
-                              </div>
-                              <div className="p-1">
-                                {availableSprints.map((sprint) => (
-                                  <DropdownMenuItem
-                                    key={sprint.id}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleAddToSprint(task.id, sprint.id);
-                                    }}
-                                    className="cursor-pointer flex items-center p-3 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-md"
-                                  >
-                                    <FolderPlus className="mr-3 h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                                    <div className="flex-1 min-w-0">
-                                      <div className="font-medium text-sm text-foreground truncate">
-                                        {sprint.name}
-                                      </div>
-                                      <div className="text-xs text-muted-foreground capitalize">
-                                        {sprint.status}
-                                      </div>
-                                    </div>
-                                  </DropdownMenuItem>
-                                ))}
-                              </div>
-                            </>
-                          ) : (
-                            <DropdownMenuItem disabled className="p-3">
-                              <span className="text-sm text-muted-foreground">
-                                No active sprints available
-                              </span>
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <h3 className="font-semibold text-foreground leading-tight line-clamp-2">
-                      {task.title}
-                    </h3>
-                    {task.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
-                        {task.description}
-                      </p>
+                  className="flex items-center justify-between p-4 border-b bg-muted/50 cursor-pointer hover:bg-muted"
+                  onClick={() => toggleSprintCollapse(sprintId)}
+                >
+                  <div className="flex items-center gap-3">
+                    {isCollapsed ? (
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
                     )}
+                    <div className="flex items-center gap-2">
+                      <Circle className="h-4 w-4 text-primary" />
+                      <span className="font-semibold">{group.sprint.name}</span>
+                      <span className="text-sm text-muted-foreground">
+                        ({group.tasks.length} work items)
+                      </span>
+                    </div>
                   </div>
-                </CardHeader>
 
-                <CardContent className="pt-0">
-                  <div className="space-y-3">
-                    {/* Status Badge */}
-                    <div className="flex items-center justify-between">
-                      <Badge
-                        variant="outline"
-                        className={`text-xs border ${
-                          statusColors[task.status]
-                        } font-medium`}
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="px-2 py-1 bg-muted rounded text-xs font-medium">
+                        0
+                      </span>
+                      <span className="px-2 py-1 bg-blue-500/10 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">
+                        0
+                      </span>
+                      <span className="px-2 py-1 bg-green-500/10 text-green-700 dark:text-green-300 rounded text-xs font-medium">
+                        0
+                      </span>
+                    </div>
+                    <Button variant="outline" size="sm">
+                      Complete sprint
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem>Edit sprint</DropdownMenuItem>
+                        <DropdownMenuItem>Delete sprint</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              )}
+
+              {(!isCollapsed || isBacklog) && (
+                <div className="divide-y divide-border">
+                  {group.tasks.map((task: any, taskIndex: number) => {
+                    const TaskTypeIcon =
+                      typeIcons[task.type as keyof typeof typeIcons];
+                    const PriorityIcon =
+                      priorityIcons[
+                        task.priority as keyof typeof priorityIcons
+                      ];
+                    const taskId = generateTaskId(
+                      task,
+                      groupIndex * 100 + taskIndex
+                    );
+
+                    return (
+                      <div
+                        key={task.id}
+                        className="flex items-center gap-4 p-3 hover:bg-muted/50 cursor-pointer group"
+                        onClick={() => handleTaskClick(task)}
                       >
-                        {task.status.replace("_", " ")}
-                      </Badge>
-                      {task.due_date && (
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <Calendar className="h-3 w-3" />
-                          <span className="text-xs">
-                            {new Date(task.due_date).toLocaleDateString()}
+                        {/* Type Icon */}
+                        <TaskTypeIcon
+                          className={cn(
+                            "h-4 w-4",
+                            typeColors[task.type as keyof typeof typeColors]
+                          )}
+                        />
+
+                        {/* Task ID */}
+                        <span className="text-sm font-mono text-muted-foreground min-w-[80px]">
+                          {taskId}
+                        </span>
+
+                        {/* Task Title */}
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm font-medium text-foreground truncate">
+                            {task.title}
                           </span>
                         </div>
-                      )}
-                    </div>
 
-                    {/* Assignee */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {task.assignee ? (
-                          <>
+                        {/* Labels/Status */}
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "text-xs",
+                              statusColors[
+                                task.status as keyof typeof statusColors
+                              ]
+                            )}
+                          >
+                            {task.status.replace("_", " ").toUpperCase()}
+                          </Badge>
+                          {task.story_points && (
+                            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                              {task.story_points}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Priority */}
+                        <PriorityIcon
+                          className={cn(
+                            "h-4 w-4",
+                            priorityColors[
+                              task.priority as keyof typeof priorityColors
+                            ]
+                          )}
+                        />
+
+                        {/* Assignee */}
+                        <div className="min-w-[32px]">
+                          {task.assignee ? (
                             <Avatar className="h-6 w-6">
                               <AvatarImage
                                 src={task.assignee.avatar || "/placeholder.svg"}
-                                alt={task.assignee.name}
                               />
                               <AvatarFallback className="text-xs">
                                 {task.assignee.initials}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-sm font-medium text-foreground">
-                              {task.assignee.name}
-                            </span>
-                          </>
-                        ) : (
-                          <>
+                          ) : (
                             <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center">
-                              <User className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">
+                                ?
+                              </span>
                             </div>
-                            <span className="text-sm text-muted-foreground">
-                              Unassigned
-                            </span>
-                          </>
-                        )}
+                          )}
+                        </div>
                       </div>
+                    );
+                  })}
+
+                  {group.tasks.length === 0 && (
+                    <div className="p-8 text-center text-muted-foreground">
+                      <p className="text-sm">
+                        {isBacklog
+                          ? "No backlog items found. Create a task to get started."
+                          : "No tasks in this sprint."}
+                      </p>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16 border border-dashed border-muted rounded-lg bg-muted/30">
-            <div className="max-w-sm mx-auto">
-              <div className="rounded-full bg-muted p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                <Plus className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-medium text-foreground mb-2">
-                {searchTerm ||
-                selectedPriority !== "all" ||
-                selectedType !== "all"
-                  ? "No tasks found"
-                  : "No backlog tasks"}
-              </h3>
-              <p className="text-muted-foreground mb-4">
-                {searchTerm ||
-                selectedPriority !== "all" ||
-                selectedType !== "all"
-                  ? "No backlog tasks found matching your filters."
-                  : "No tasks in backlog. Tasks in active sprints won't appear here."}
-              </p>
-              <Button onClick={() => setShowCreateModal(true)} size="sm">
-                <Plus className="mr-2 h-4 w-4" />
-                Create First Task
-              </Button>
+                  )}
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          );
+        })}
       </div>
 
       <CreateTaskModal
