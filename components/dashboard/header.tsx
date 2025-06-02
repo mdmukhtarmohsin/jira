@@ -65,7 +65,7 @@ export function DashboardHeader() {
         </div>
 
         <div className="flex items-center space-x-4">
-          <DropdownMenu>
+          {/* <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="relative">
                 <Bell className="h-5 w-5" />
@@ -104,7 +104,7 @@ export function DashboardHeader() {
                 </div>
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
 
           <ThemeToggle />
 
