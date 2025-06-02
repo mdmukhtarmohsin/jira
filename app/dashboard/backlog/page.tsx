@@ -29,6 +29,7 @@ import {
   ArrowDown,
   Minus,
   Settings,
+  Filter,
 } from "lucide-react";
 import { CreateTaskModal } from "@/components/modals/create-task-modal";
 import { useKanbanData } from "@/hooks/use-kanban-data";
@@ -42,6 +43,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const priorityIcons = {
   high: ArrowUp,
@@ -346,22 +353,53 @@ export default function BacklogPage() {
               ))}
             </SelectContent>
           </Select>
-          <Button onClick={() => setShowCreateModal(true)} size="sm">
+          <Button
+            onClick={() => setShowCreateModal(true)}
+            size="sm"
+            className="bg-primary hover:bg-primary/90 text-white font-medium"
+          >
             <Plus className="mr-2 h-4 w-4" />
-            Create
+            Create Task
           </Button>
-          <Button variant="ghost" size="sm">
-            <Settings className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="sm">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="icon" className="h-8 w-8">
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Backlog Settings</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon" className="h-8 w-8">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem>Export backlog</DropdownMenuItem>
+                    <DropdownMenuItem>Print view</DropdownMenuItem>
+                    <DropdownMenuItem>Configure columns</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>More options</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3 p-3 bg-card border rounded-lg dark:bg-gray-800/50">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-wrap items-center gap-3 p-4 bg-card border rounded-lg shadow-sm dark:bg-gray-800/50">
+        <div className="relative flex-1 min-w-[280px]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search backlog"
@@ -371,57 +409,73 @@ export default function BacklogPage() {
           />
         </div>
 
-        <Select value={selectedEpic} onValueChange={setSelectedEpic}>
-          <SelectTrigger className="w-32">
-            <SelectValue placeholder="Epic" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Epics</SelectItem>
-            <SelectItem value="no-epic">No Epic</SelectItem>
-            {epics.map((epic) => (
-              <SelectItem key={epic.id} value={epic.id}>
-                {epic.title}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Select value={selectedEpic} onValueChange={setSelectedEpic}>
+            <SelectTrigger className="w-32 h-9">
+              <SelectValue placeholder="Epic" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Epics</SelectItem>
+              <SelectItem value="no-epic">No Epic</SelectItem>
+              {epics.map((epic) => (
+                <SelectItem key={epic.id} value={epic.id}>
+                  {epic.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Select value={selectedType} onValueChange={setSelectedType}>
-          <SelectTrigger className="w-32">
-            <SelectValue placeholder="Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Type</SelectItem>
-            <SelectItem value="story">Story</SelectItem>
-            <SelectItem value="task">Task</SelectItem>
-            <SelectItem value="bug">Bug</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={selectedType} onValueChange={setSelectedType}>
+            <SelectTrigger className="w-32 h-9">
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Type</SelectItem>
+              <SelectItem value="story">Story</SelectItem>
+              <SelectItem value="task">Task</SelectItem>
+              <SelectItem value="bug">Bug</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <Select value={selectedLabel} onValueChange={setSelectedLabel}>
-          <SelectTrigger className="w-32">
-            <SelectValue placeholder="Label" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Labels</SelectItem>
-            {labels.map((label) => (
-              <SelectItem key={label.id} value={label.id}>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: label.color }}
-                  />
-                  {label.name}
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <Select value={selectedLabel} onValueChange={setSelectedLabel}>
+            <SelectTrigger className="w-32 h-9">
+              <SelectValue placeholder="Label" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Labels</SelectItem>
+              {labels.map((label) => (
+                <SelectItem key={label.id} value={label.id}>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: label.color }}
+                    />
+                    {label.name}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Button variant="outline" size="sm" onClick={resetFilters}>
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Reset Filters
-        </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={resetFilters}
+                  className="flex items-center h-9"
+                >
+                  <Filter className="mr-2 h-4 w-4" />
+                  Clear
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Reset all filters</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </div>
 
       {/* Task Groups */}
@@ -438,7 +492,7 @@ export default function BacklogPage() {
             >
               {!isBacklog && (
                 <div
-                  className="flex items-center justify-between p-4 border-b bg-muted/50 dark:bg-gray-800/80 cursor-pointer hover:bg-muted dark:hover:bg-gray-700/50"
+                  className="flex items-center justify-between p-4 border-b bg-muted/50 dark:bg-gray-800/80 cursor-pointer hover:bg-muted dark:hover:bg-gray-700/50 transition-colors"
                   onClick={() => toggleSprintCollapse(sprintId)}
                 >
                   <div className="flex items-center gap-3">
@@ -450,9 +504,9 @@ export default function BacklogPage() {
                     <div className="flex items-center gap-2">
                       <Circle className="h-4 w-4 text-primary" />
                       <span className="font-semibold">{group.sprint.name}</span>
-                      <span className="text-sm text-muted-foreground">
-                        ({group.tasks.length} work items)
-                      </span>
+                      <Badge variant="secondary" className="ml-2">
+                        {group.tasks.length} items
+                      </Badge>
                     </div>
                   </div>
 
@@ -468,18 +522,40 @@ export default function BacklogPage() {
                         0
                       </span>
                     </div>
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent collapse toggle
+                        toast({
+                          title: "Complete Sprint",
+                          description:
+                            "This would complete the sprint in a real app",
+                        });
+                      }}
+                    >
                       Complete sprint
                     </Button>
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
+                      <DropdownMenuTrigger
+                        asChild
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                        >
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent>
+                      <DropdownMenuContent align="end">
                         <DropdownMenuItem>Edit sprint</DropdownMenuItem>
-                        <DropdownMenuItem>Delete sprint</DropdownMenuItem>
+                        <DropdownMenuItem>Add tasks</DropdownMenuItem>
+                        <DropdownMenuItem className="text-red-500">
+                          Delete sprint
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
