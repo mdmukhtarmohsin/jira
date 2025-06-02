@@ -111,8 +111,8 @@ export default function BacklogPage() {
 
   // Set sprint filter to "backlog" when component mounts or team changes
   useEffect(() => {
-    if (selectedTeamId && selectedSprintId !== "backlog") {
-      setSelectedSprintId("backlog");
+    if (selectedTeamId && selectedSprintId !== "all") {
+      setSelectedSprintId("all");
     }
     // Reset filters when team changes
     setSelectedEpic("all");
@@ -185,31 +185,45 @@ export default function BacklogPage() {
       );
     });
 
-    if (selectedSprintId === "backlog") {
-      return [{ sprint: null, tasks: filteredTasks }];
-    }
-
-    // Group by sprint
+    // Always group by sprint, regardless of selected sprint view
     const sprintGroups = new Map();
 
+    // Always add a backlog group first
+    sprintGroups.set("backlog", {
+      sprint: {
+        id: "backlog",
+        name: "Backlog",
+        status: "backlog",
+      },
+      tasks: [],
+    });
+
+    // Group all tasks by their sprint (or put in backlog if they have no sprint)
     filteredTasks.forEach((task) => {
       const sprintId = task.sprint?.id || "backlog";
-      const sprintName = task.sprint?.name || "Backlog";
 
       if (!sprintGroups.has(sprintId)) {
         sprintGroups.set(sprintId, {
-          sprint: task.sprint || {
-            id: "backlog",
-            name: "Backlog",
-            status: "backlog",
-          },
+          sprint: task.sprint,
           tasks: [],
         });
       }
+
       sprintGroups.get(sprintId).tasks.push(task);
     });
 
-    return Array.from(sprintGroups.values());
+    // Sort groups to make sure backlog is first, then active sprints, then future sprints
+    const sortedGroups = Array.from(sprintGroups.values());
+    sortedGroups.sort((a, b) => {
+      // Backlog always first
+      if (a.sprint.id === "backlog") return -1;
+      if (b.sprint.id === "backlog") return 1;
+
+      // Sort remaining sprints by status/name
+      return a.sprint.name.localeCompare(b.sprint.name);
+    });
+
+    return sortedGroups;
   };
 
   if (loading) {
