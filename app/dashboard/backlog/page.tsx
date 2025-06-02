@@ -109,6 +109,16 @@ export default function BacklogPage() {
     new Set()
   );
 
+  // Function to reset all filters
+  const resetFilters = () => {
+    setSearchTerm("");
+    setSelectedPriority("all");
+    setSelectedType("all");
+    setSelectedStatus("all");
+    setSelectedEpic("all");
+    setSelectedLabel("all");
+  };
+
   // Set sprint filter to "backlog" when component mounts or team changes
   useEffect(() => {
     if (selectedTeamId && selectedSprintId !== "all") {
@@ -361,15 +371,6 @@ export default function BacklogPage() {
           />
         </div>
 
-        <Select value="all">
-          <SelectTrigger className="w-32">
-            <SelectValue placeholder="Version" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Version</SelectItem>
-          </SelectContent>
-        </Select>
-
         <Select value={selectedEpic} onValueChange={setSelectedEpic}>
           <SelectTrigger className="w-32">
             <SelectValue placeholder="Epic" />
@@ -416,6 +417,11 @@ export default function BacklogPage() {
             ))}
           </SelectContent>
         </Select>
+
+        <Button variant="outline" size="sm" onClick={resetFilters}>
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Reset Filters
+        </Button>
       </div>
 
       {/* Task Groups */}
