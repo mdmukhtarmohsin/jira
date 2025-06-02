@@ -292,6 +292,9 @@ export function ExistingSprints({
     if (!sprintToDelete) return;
 
     try {
+      // Close dialog first
+      setDeleteDialogOpen(false);
+
       const { error } = await supabase
         .from("sprints")
         .delete()
@@ -301,7 +304,6 @@ export function ExistingSprints({
 
       await fetchSprints();
       onRefresh();
-      setDeleteDialogOpen(false);
       setSprintToDelete(null);
 
       toast({
@@ -316,6 +318,11 @@ export function ExistingSprints({
         variant: "destructive",
       });
     }
+  };
+
+  // Handle user clicking the delete button
+  const onDeleteClick = () => {
+    handleDeleteConfirm();
   };
 
   // Filter sprints based on search query and status filter
@@ -636,12 +643,12 @@ export function ExistingSprints({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
+            <Button
+              onClick={onDeleteClick}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete Sprint
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
