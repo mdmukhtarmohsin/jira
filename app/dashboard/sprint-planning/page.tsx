@@ -80,7 +80,27 @@ Create API documentation [low] (2)
 Implement data export feature [medium] (5)
 Add dark mode toggle [low] (3)
 Fix form validation issues [high] (3) {bug}
-Optimize database queries [medium] (8)`;
+Optimize database queries [medium] (8)
+Implement social media sharing
+Setup CI/CD pipeline [high] (13)
+Create onboarding tutorial (5)
+Design new logo for brand refresh
+Refactor authentication middleware [medium]
+Add user activity logging
+Fix payment gateway timeout issue [high] (5) {bug}
+Implement multi-language support (8)
+Create admin dashboard [medium] (8)
+Update privacy policy page
+Implement file upload feature [medium] (5)
+Optimize image loading performance [low] (3)
+Add user roles and permissions [high] (13)
+Fix cross-browser compatibility issues {bug}
+Create API rate limiting
+Implement password reset functionality [medium] (3)
+Add search functionality to the dashboard (5)
+Update third-party dependencies
+Create unit tests for core components [medium]
+Fix memory leak in data visualization component [high] (5) {bug}`;
 
   // Function to generate sample tasks
   const generateSampleTasks = () => {
@@ -131,7 +151,7 @@ Optimize database queries [medium] (8)`;
           description: "Please select a team first",
           variant: "destructive",
         });
-        return;
+        return Promise.reject("No team selected");
       }
 
       // Generate start and end dates (2-week sprint starting next Monday)
@@ -162,12 +182,14 @@ Optimize database queries [medium] (8)`;
           description: "Sprint created successfully!",
         });
         refetch(); // Refresh the data
+        return Promise.resolve();
       } else {
         toast({
           title: "Error",
           description: result.error || "Failed to create sprint",
           variant: "destructive",
         });
+        return Promise.reject(result.error || "Failed to create sprint");
       }
     } catch (error: any) {
       console.error("Error creating sprint from AI suggestion:", error);
@@ -176,6 +198,7 @@ Optimize database queries [medium] (8)`;
         description: "Failed to create sprint",
         variant: "destructive",
       });
+      return Promise.reject(error);
     }
   };
 

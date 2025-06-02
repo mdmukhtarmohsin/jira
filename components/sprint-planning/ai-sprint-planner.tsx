@@ -65,7 +65,7 @@ interface AiSprintPlannerProps {
   tasks: Task[];
   teamMembers: TeamMember[];
   sprintDuration: number;
-  onSuggestionAccepted: (suggestion: AISuggestion) => void;
+  onSuggestionAccepted: (suggestion: AISuggestion) => Promise<void>;
   customTasks?: string;
   setCustomTasks?: (tasks: string) => void;
 }
@@ -80,6 +80,7 @@ export function AiSprintPlanner({
 }: AiSprintPlannerProps) {
   const [localCustomTasks, setLocalCustomTasks] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isCreatingSprint, setIsCreatingSprint] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<AISuggestion | null>(null);
 
   // Use prop values if provided, otherwise use local state
@@ -210,25 +211,38 @@ export function AiSprintPlanner({
     });
   };
 
-  const handleAcceptSuggestion = () => {
+  const handleAcceptSuggestion = async () => {
     if (aiSuggestion) {
-      // If custom tasks were used, we need to handle them differently
-      if (aiSuggestion.usedCustomTasks) {
-        // Parse the custom tasks to get their details
-        const parsedCustomTasks = parseCustomTasks(
-          aiSuggestion.customTasksText || customTasks
-        );
+      setIsCreatingSprint(true);
 
-        // Pass both the task IDs and the parsed custom task objects
-        onSuggestionAccepted({
-          ...aiSuggestion,
-          customTasksText: aiSuggestion.customTasksText || customTasks,
-          // Add the parsed custom tasks to the suggestion
-          parsedCustomTasks: parsedCustomTasks,
+      try {
+        // If custom tasks were used, we need to handle them differently
+        if (aiSuggestion.usedCustomTasks) {
+          // Parse the custom tasks to get their details
+          const parsedCustomTasks = parseCustomTasks(
+            aiSuggestion.customTasksText || customTasks
+          );
+
+          // Pass both the task IDs and the parsed custom task objects
+          await onSuggestionAccepted({
+            ...aiSuggestion,
+            customTasksText: aiSuggestion.customTasksText || customTasks,
+            // Add the parsed custom tasks to the suggestion
+            parsedCustomTasks: parsedCustomTasks,
+          });
+        } else {
+          // For existing tasks, pass the recommended task IDs
+          await onSuggestionAccepted(aiSuggestion);
+        }
+      } catch (error) {
+        console.error("Error creating sprint:", error);
+        toast({
+          title: "Error",
+          description: "Failed to create sprint",
+          variant: "destructive",
         });
-      } else {
-        // For existing tasks, pass the recommended task IDs
-        onSuggestionAccepted(aiSuggestion);
+      } finally {
+        setIsCreatingSprint(false);
       }
     }
   };
@@ -612,15 +626,26 @@ export function AiSprintPlanner({
               onClick={handleAcceptSuggestion}
               size="lg"
               className="flex-1"
+              disabled={isCreatingSprint}
             >
-              <Check className="mr-2 h-4 w-4" />
-              Accept & Create Sprint
+              {isCreatingSprint ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Creating Sprint...
+                </>
+              ) : (
+                <>
+                  <Check className="mr-2 h-4 w-4" />
+                  Accept & Create Sprint
+                </>
+              )}
             </Button>
             <Button
               variant="outline"
               onClick={() => setAiSuggestion(null)}
               size="lg"
               className="flex-1"
+              disabled={isCreatingSprint}
             >
               <X className="mr-2 h-4 w-4" />
               Generate New Plan
