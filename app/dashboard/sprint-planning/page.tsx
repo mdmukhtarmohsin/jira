@@ -18,17 +18,13 @@ import {
   Sparkles,
   RefreshCw,
   AlertTriangle,
-  BarChart3,
   Target,
   Zap,
   Brain,
-  Settings,
-  Play,
-  Pause,
-  Square,
   Filter,
   Search,
   List,
+  FileText,
 } from "lucide-react";
 import { useSprintPlanningData } from "@/hooks/use-sprint-planning-data";
 import { ExistingSprints } from "@/components/sprint-planning/existing-sprints";
@@ -45,6 +41,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { format, addDays } from "date-fns";
+
+// Define extended Team interface for the component
+interface TeamWithDescription {
+  id: string;
+  name: string;
+  description: string;
+}
 
 export default function SprintPlanningPage() {
   const router = useRouter();
@@ -65,11 +68,34 @@ export default function SprintPlanningPage() {
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "planning" | "completed"
   >("all");
+  const [customTasks, setCustomTasks] = useState("");
+
+  // Sample tasks for the generate button
+  const sampleTasks = `Implement user authentication [high] (8)
+Create responsive dashboard layout [medium] (5)
+Fix mobile navigation bug [high] (3) {bug}
+Add email notification system [medium] (5)
+Update user profile page [low] (3)
+Create API documentation [low] (2)
+Implement data export feature [medium] (5)
+Add dark mode toggle [low] (3)
+Fix form validation issues [high] (3) {bug}
+Optimize database queries [medium] (8)`;
+
+  // Function to generate sample tasks
+  const generateSampleTasks = () => {
+    setCustomTasks(sampleTasks);
+    toast({
+      title: "Sample Tasks Generated",
+      description: "Sample tasks have been added to the input field",
+    });
+  };
 
   // Convert teams to the format expected by ExistingSprints
-  const teamsForSprints = teams.map((team) => ({
+  const teamsForSprints: TeamWithDescription[] = teams.map((team) => ({
     id: team.id,
     name: team.name,
+    description: "", // Add empty description as it's required by the component
   }));
 
   const handleSprintCreated = () => {
@@ -90,10 +116,21 @@ export default function SprintPlanningPage() {
     reasoning: string;
     usedCustomTasks?: boolean;
     customTasksText?: string;
+    parsedCustomTasks?: Array<{
+      id: string;
+      title: string;
+      type: string;
+      priority: string;
+      story_points: number;
+    }>;
   }) => {
     try {
       if (!selectedTeamId) {
-        toast.error("Please select a team first");
+        toast({
+          title: "Error",
+          description: "Please select a team first",
+          variant: "destructive",
+        });
         return;
       }
 
@@ -112,17 +149,33 @@ export default function SprintPlanningPage() {
         tasks: suggestion.recommendedTasks,
       };
 
+      // If using custom tasks, add them to the sprint data
+      if (suggestion.usedCustomTasks && suggestion.parsedCustomTasks) {
+        (sprintData as any).customTasks = suggestion.parsedCustomTasks;
+      }
+
       const result = await createSprint(sprintData);
 
       if (result.success) {
-        toast.success("Sprint created successfully!");
+        toast({
+          title: "Success",
+          description: "Sprint created successfully!",
+        });
         refetch(); // Refresh the data
       } else {
-        toast.error(result.error || "Failed to create sprint");
+        toast({
+          title: "Error",
+          description: result.error || "Failed to create sprint",
+          variant: "destructive",
+        });
       }
     } catch (error: any) {
       console.error("Error creating sprint from AI suggestion:", error);
-      toast.error("Failed to create sprint");
+      toast({
+        title: "Error",
+        description: "Failed to create sprint",
+        variant: "destructive",
+      });
     }
   };
 
@@ -211,12 +264,12 @@ export default function SprintPlanningPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header with AI emphasis */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Sprint Planning</h1>
           <p className="text-muted-foreground text-lg">
-            Plan and manage your sprints with AI-powered insights
+            Plan and manage your sprints
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -224,95 +277,28 @@ export default function SprintPlanningPage() {
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
+          {/* {selectedTeam && (
+            <Badge variant="secondary" className="text-sm">
+              Team: {selectedTeam.name}
+            </Badge>
+          )} */}
         </div>
-        {selectedTeam && (
-          <Badge variant="secondary" className="text-sm">
-            Team: {selectedTeam.name}
-          </Badge>
-        )}
       </div>
 
-      {/* AI Sprint Planner Hero Section */}
-      <Card className="bg-gradient-to-r from-primary/5 via-purple-500/5 to-primary/5 border-primary/20">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="rounded-full bg-primary/10 p-2">
-              <Sparkles className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <CardTitle className="text-xl">AI Sprint Planner</CardTitle>
-              <CardDescription className="text-base">
-                Let AI help you create optimal sprint plans based on team
-                capacity and priorities
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50">
-              <Brain className="h-5 w-5 text-primary" />
-              <div>
-                <h4 className="font-medium text-sm">Smart Task Selection</h4>
-                <p className="text-xs text-muted-foreground">
-                  AI analyzes task dependencies and priorities
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50">
-              <Zap className="h-5 w-5 text-primary" />
-              <div>
-                <h4 className="font-medium text-sm">Capacity Optimization</h4>
-                <p className="text-xs text-muted-foreground">
-                  Balances workload across team members
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50">
-              <Target className="h-5 w-5 text-primary" />
-              <div>
-                <h4 className="font-medium text-sm">Goal Achievement</h4>
-                <p className="text-xs text-muted-foreground">
-                  Recommends achievable sprint goals
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button
-              onClick={() => setActiveTab("ai-planner")}
-              className="gap-2"
-              size="lg"
-            >
-              <Sparkles className="h-4 w-4" />
-              Create AI Sprint Plan
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setActiveTab("create")}
-              size="lg"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Manual Sprint Creation
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Enhanced Tabs */}
+      {/* Simplified Tabs */}
       <Tabs
         value={activeTab}
         onValueChange={setActiveTab}
         className="space-y-6"
       >
         <div className="flex items-center justify-between">
-          <TabsList className="grid w-auto grid-cols-3 h-11">
+          <TabsList className="grid w-auto grid-cols-3 h-12">
             <TabsTrigger
               value="overview"
               className="flex items-center gap-2 px-6"
             >
               <List className="h-4 w-4" />
-              <span>Sprint Overview</span>
+              <span>Sprints</span>
             </TabsTrigger>
             <TabsTrigger
               value="create"
@@ -323,17 +309,14 @@ export default function SprintPlanningPage() {
             </TabsTrigger>
             <TabsTrigger
               value="ai-planner"
-              className="flex items-center gap-2 px-6 bg-gradient-to-r from-primary/10 to-purple-500/10 border-primary/20"
+              className="flex items-center gap-2 px-6"
             >
               <Sparkles className="h-4 w-4" />
-              <span>AI Sprint Planner</span>
-              <Badge variant="secondary" className="ml-1 text-xs">
-                AI
-              </Badge>
+              <span>AI Planner</span>
             </TabsTrigger>
           </TabsList>
 
-          {/* Enhanced Filters for Overview Tab */}
+          {/* Filters for Overview Tab */}
           {activeTab === "overview" && (
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -345,7 +328,14 @@ export default function SprintPlanningPage() {
                   className="pl-9 w-64"
                 />
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select
+                value={statusFilter}
+                onValueChange={(value) =>
+                  setStatusFilter(
+                    value as "all" | "active" | "planning" | "completed"
+                  )
+                }
+              >
                 <SelectTrigger className="w-40">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Status" />
@@ -361,18 +351,20 @@ export default function SprintPlanningPage() {
           )}
         </div>
 
+        {/* Sprint Overview */}
         <TabsContent value="overview" className="space-y-6">
           <ExistingSprints
             teams={teamsForSprints}
             selectedTeamId={selectedTeamId}
-            setSelectedTeamId={setSelectedTeamId}
+            setSelectedTeamId={(teamId) => setSelectedTeamId(teamId || "")}
             searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
             statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
+            onCreateNew={() => setActiveTab("create")}
+            onRefresh={refetch}
           />
         </TabsContent>
 
+        {/* Create Sprint */}
         <TabsContent value="create" className="space-y-6">
           <Card>
             <CardHeader>
@@ -381,7 +373,7 @@ export default function SprintPlanningPage() {
                 Create New Sprint
               </CardTitle>
               <CardDescription>
-                Manually create and configure a new sprint for your team
+                Configure a new sprint for your team
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -391,36 +383,84 @@ export default function SprintPlanningPage() {
                 setSelectedTeamId={setSelectedTeamId}
                 backlogTasks={backlogTasks}
                 teamMembers={teamMembers}
-                loading={loading}
                 createSprint={createSprint}
                 onSprintCreated={handleSprintCreated}
+                onCancel={() => setActiveTab("overview")}
               />
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* AI Sprint Planner */}
         <TabsContent value="ai-planner" className="space-y-6">
-          <Card className="border-primary/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <div className="rounded-full bg-primary/10 p-1">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                </div>
-                AI Sprint Planner
-                <Badge variant="secondary" className="ml-2">
-                  Powered by AI
-                </Badge>
-              </CardTitle>
-              <CardDescription>
-                Let our AI analyze your backlog and team capacity to create an
-                optimal sprint plan
-              </CardDescription>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  AI Sprint Planner
+                  <Badge variant="outline" className="ml-2">
+                    AI-Powered
+                  </Badge>
+                </CardTitle>
+                <CardDescription>
+                  Let AI analyze your backlog and team capacity to suggest an
+                  optimal sprint plan
+                </CardDescription>
+              </div>
+              <Button
+                variant="secondary"
+                onClick={generateSampleTasks}
+                className="gap-2"
+                size="sm"
+              >
+                <FileText className="h-4 w-4" />
+                Generate Sample Tasks
+              </Button>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
+              {/* AI Features */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="flex items-center gap-3 p-3 rounded-lg border bg-background">
+                  <Brain className="h-5 w-5 text-primary" />
+                  <div>
+                    <h4 className="font-medium text-sm">
+                      Smart Task Selection
+                    </h4>
+                    <p className="text-xs text-muted-foreground">
+                      Analyzes dependencies and priorities
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-lg border bg-background">
+                  <Zap className="h-5 w-5 text-primary" />
+                  <div>
+                    <h4 className="font-medium text-sm">
+                      Capacity Optimization
+                    </h4>
+                    <p className="text-xs text-muted-foreground">
+                      Balances workload across team
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-lg border bg-background">
+                  <Target className="h-5 w-5 text-primary" />
+                  <div>
+                    <h4 className="font-medium text-sm">Goal Achievement</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Recommends achievable goals
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <AiSprintPlanner
                 tasks={backlogTasks}
                 teamMembers={teamMembers}
-                onAcceptSuggestion={handleAiSprintSuggestionAccepted}
+                sprintDuration={14}
+                onSuggestionAccepted={handleAiSprintSuggestionAccepted}
+                customTasks={customTasks}
+                setCustomTasks={setCustomTasks}
               />
             </CardContent>
           </Card>

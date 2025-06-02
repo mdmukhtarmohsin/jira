@@ -52,6 +52,13 @@ interface AISuggestion {
   reasoning: string;
   usedCustomTasks?: boolean;
   customTasksText?: string;
+  parsedCustomTasks?: Array<{
+    id: string;
+    title: string;
+    type: string;
+    priority: string;
+    story_points: number;
+  }>;
 }
 
 interface AiSprintPlannerProps {
@@ -59,6 +66,8 @@ interface AiSprintPlannerProps {
   teamMembers: TeamMember[];
   sprintDuration: number;
   onSuggestionAccepted: (suggestion: AISuggestion) => void;
+  customTasks?: string;
+  setCustomTasks?: (tasks: string) => void;
 }
 
 export function AiSprintPlanner({
@@ -66,10 +75,17 @@ export function AiSprintPlanner({
   teamMembers,
   sprintDuration,
   onSuggestionAccepted,
+  customTasks: propCustomTasks,
+  setCustomTasks: propSetCustomTasks,
 }: AiSprintPlannerProps) {
-  const [customTasks, setCustomTasks] = useState("");
+  const [localCustomTasks, setLocalCustomTasks] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<AISuggestion | null>(null);
+
+  // Use prop values if provided, otherwise use local state
+  const customTasks =
+    propCustomTasks !== undefined ? propCustomTasks : localCustomTasks;
+  const setCustomTasks = propSetCustomTasks || setLocalCustomTasks;
 
   const handleGeneratePlan = async () => {
     setIsGenerating(true);
@@ -196,12 +212,19 @@ export function AiSprintPlanner({
 
   const handleAcceptSuggestion = () => {
     if (aiSuggestion) {
-      // If custom tasks were used, we need to populate the custom tasks field
+      // If custom tasks were used, we need to handle them differently
       if (aiSuggestion.usedCustomTasks) {
-        // For custom tasks, we'll pass the suggestion with the custom tasks text
+        // Parse the custom tasks to get their details
+        const parsedCustomTasks = parseCustomTasks(
+          aiSuggestion.customTasksText || customTasks
+        );
+
+        // Pass both the task IDs and the parsed custom task objects
         onSuggestionAccepted({
           ...aiSuggestion,
           customTasksText: aiSuggestion.customTasksText || customTasks,
+          // Add the parsed custom tasks to the suggestion
+          parsedCustomTasks: parsedCustomTasks,
         });
       } else {
         // For existing tasks, pass the recommended task IDs
@@ -213,13 +236,13 @@ export function AiSprintPlanner({
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high":
-        return "bg-red-100 text-red-800 dark:bg-red-950/30 dark:text-red-300";
+        return "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200";
       case "medium":
-        return "bg-orange-100 text-orange-800 dark:bg-orange-950/30 dark:text-orange-300";
+        return "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200";
       case "low":
-        return "bg-green-100 text-green-800 dark:bg-green-950/30 dark:text-green-300";
+        return "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-950/30 dark:text-gray-300";
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800/40 dark:text-gray-200";
     }
   };
 
@@ -448,10 +471,10 @@ export function AiSprintPlanner({
           </Card>
 
           {/* Selected Tasks */}
-          <Card>
+          <Card className="border-muted dark:border-muted/30">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-600" />
+                <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
                 Selected Tasks ({aiSuggestion.recommendedTasks.length})
               </CardTitle>
               <CardDescription>
@@ -467,10 +490,10 @@ export function AiSprintPlanner({
                     ).map((task, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border"
+                        className="flex items-center justify-between p-3 bg-muted/50 dark:bg-gray-800/50 rounded-lg border border-muted dark:border-gray-700"
                       >
                         <div className="flex items-center gap-3">
-                          <Check className="h-4 w-4 text-green-600" />
+                          <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
                           <span className="font-medium">{task.title}</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -480,7 +503,10 @@ export function AiSprintPlanner({
                           >
                             {task.priority}
                           </Badge>
-                          <Badge variant="outline">
+                          <Badge
+                            variant="outline"
+                            className="dark:border-gray-700"
+                          >
                             {task.story_points || 0} pts
                           </Badge>
                         </div>
@@ -492,10 +518,10 @@ export function AiSprintPlanner({
                       return task ? (
                         <div
                           key={taskId}
-                          className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border"
+                          className="flex items-center justify-between p-3 bg-muted/50 dark:bg-gray-800/50 rounded-lg border border-muted dark:border-gray-700"
                         >
                           <div className="flex items-center gap-3">
-                            <Check className="h-4 w-4 text-green-600" />
+                            <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
                             <span className="font-medium">{task.title}</span>
                           </div>
                           <div className="flex items-center gap-2">
@@ -505,7 +531,10 @@ export function AiSprintPlanner({
                             >
                               {task.priority}
                             </Badge>
-                            <Badge variant="outline">
+                            <Badge
+                              variant="outline"
+                              className="dark:border-gray-700"
+                            >
                               {task.story_points || 0} pts
                             </Badge>
                           </div>
@@ -517,7 +546,7 @@ export function AiSprintPlanner({
           </Card>
 
           {/* Workload Distribution */}
-          <Card>
+          <Card className="border-muted dark:border-muted/30">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5 text-primary" />
@@ -539,7 +568,7 @@ export function AiSprintPlanner({
                 return (
                   <div
                     key={index}
-                    className="p-4 bg-muted/50 rounded-lg border"
+                    className="p-4 bg-muted/50 dark:bg-gray-800/50 rounded-lg border border-muted dark:border-gray-700"
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div>
@@ -551,7 +580,7 @@ export function AiSprintPlanner({
                           {assignment.storyPoints} story points
                         </p>
                       </div>
-                      <Badge variant="outline">
+                      <Badge variant="outline" className="dark:border-gray-700">
                         {utilizationPercent}% utilized
                       </Badge>
                     </div>
@@ -563,7 +592,7 @@ export function AiSprintPlanner({
           </Card>
 
           {/* AI Reasoning */}
-          <Card>
+          <Card className="border-muted dark:border-muted/30">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Brain className="h-5 w-5 text-primary" />
@@ -571,7 +600,7 @@ export function AiSprintPlanner({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm leading-relaxed bg-muted/50 p-4 rounded-lg border-l-4 border-primary">
+              <p className="text-sm leading-relaxed bg-muted/50 dark:bg-gray-800/50 p-4 rounded-lg border-l-4 border-primary dark:border-primary/70">
                 {aiSuggestion.reasoning}
               </p>
             </CardContent>

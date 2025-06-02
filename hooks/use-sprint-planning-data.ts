@@ -229,6 +229,13 @@ export function useSprintPlanningData() {
     end_date: string;
     team_id: string;
     tasks: string[];
+    customTasks?: Array<{
+      id: string;
+      title: string;
+      priority: string;
+      story_points: number;
+      type?: string;
+    }>;
   }) => {
     try {
       // Create the sprint
@@ -252,26 +259,65 @@ export function useSprintPlanningData() {
 
       // Add tasks to the sprint if any are selected
       if (sprintData.tasks.length > 0) {
-        // First, verify that all tasks exist and belong to the team
-        const { data: existingTasks, error: tasksCheckError } = await supabase
-          .from("tasks")
-          .select("id")
-          .eq("team_id", sprintData.team_id)
-          .in("id", sprintData.tasks);
+        let taskIdsToAdd = [];
 
-        if (tasksCheckError) {
-          console.error("Tasks check error:", tasksCheckError);
-          throw new Error(`Failed to verify tasks: ${tasksCheckError.message}`);
+        // Check if there are custom tasks (from AI planner)
+        if (sprintData.customTasks && sprintData.customTasks.length > 0) {
+          console.log("Processing custom tasks from AI planner...");
+
+          // Create the custom tasks in the database first
+          const customTasksToCreate = sprintData.customTasks.map((task) => ({
+            title: task.title,
+            priority: task.priority || "medium",
+            story_points: task.story_points || 3,
+            type: task.type || "task",
+            status: "in_progress",
+            team_id: sprintData.team_id,
+          }));
+
+          const { data: createdTasks, error: createTasksError } = await supabase
+            .from("tasks")
+            .insert(customTasksToCreate)
+            .select("id");
+
+          if (createTasksError) {
+            console.error("Error creating custom tasks:", createTasksError);
+            throw new Error(
+              `Failed to create custom tasks: ${createTasksError.message}`
+            );
+          }
+
+          // Add the newly created task IDs to our list
+          taskIdsToAdd = createdTasks.map((task) => task.id);
+          console.log(`Created ${taskIdsToAdd.length} custom tasks`);
+        } else {
+          // Handle existing tasks (standard flow)
+          // First, verify that all tasks exist and belong to the team
+          const { data: existingTasks, error: tasksCheckError } = await supabase
+            .from("tasks")
+            .select("id")
+            .eq("team_id", sprintData.team_id)
+            .in("id", sprintData.tasks);
+
+          if (tasksCheckError) {
+            console.error("Tasks check error:", tasksCheckError);
+            throw new Error(
+              `Failed to verify tasks: ${tasksCheckError.message}`
+            );
+          }
+
+          taskIdsToAdd = existingTasks?.map((task) => task.id) || [];
+
+          if (taskIdsToAdd.length !== sprintData.tasks.length) {
+            console.warn(
+              "Some tasks were not found or don't belong to the team"
+            );
+          }
         }
 
-        const validTaskIds = existingTasks?.map((task) => task.id) || [];
-
-        if (validTaskIds.length !== sprintData.tasks.length) {
-          console.warn("Some tasks were not found or don't belong to the team");
-        }
-
-        if (validTaskIds.length > 0) {
-          const sprintTasks = validTaskIds.map((taskId) => ({
+        // Add tasks to the sprint
+        if (taskIdsToAdd.length > 0) {
+          const sprintTasks = taskIdsToAdd.map((taskId) => ({
             sprint_id: sprint.id,
             task_id: taskId,
           }));
@@ -291,7 +337,7 @@ export function useSprintPlanningData() {
           const { error: updateError } = await supabase
             .from("tasks")
             .update({ status: "in_progress" })
-            .in("id", validTaskIds);
+            .in("id", taskIdsToAdd);
 
           if (updateError) {
             console.error("Task status update error:", updateError);
