@@ -350,7 +350,7 @@ export default function BacklogPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3 p-3 bg-card border rounded-lg">
+      <div className="flex items-center gap-3 p-3 bg-card border rounded-lg dark:bg-gray-800/50">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -426,10 +426,13 @@ export default function BacklogPage() {
           const isCollapsed = collapsedSprints.has(sprintId);
 
           return (
-            <div key={sprintId} className="border rounded-lg bg-card">
+            <div
+              key={sprintId}
+              className="border rounded-lg bg-card dark:bg-gray-800/50"
+            >
               {!isBacklog && (
                 <div
-                  className="flex items-center justify-between p-4 border-b bg-muted/50 cursor-pointer hover:bg-muted"
+                  className="flex items-center justify-between p-4 border-b bg-muted/50 dark:bg-gray-800/80 cursor-pointer hover:bg-muted dark:hover:bg-gray-700/50"
                   onClick={() => toggleSprintCollapse(sprintId)}
                 >
                   <div className="flex items-center gap-3">
@@ -494,7 +497,7 @@ export default function BacklogPage() {
                     return (
                       <div
                         key={task.id}
-                        className="flex items-center gap-4 p-3 hover:bg-muted/50 cursor-pointer group"
+                        className="flex items-center gap-4 p-3 hover:bg-muted/50 dark:hover:bg-gray-700/50 cursor-pointer group"
                         onClick={() => handleTaskClick(task)}
                       >
                         {/* Type Icon */}
